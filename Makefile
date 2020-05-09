@@ -727,10 +727,6 @@ ifeq ($(cc-name),clang)
 KBUILD_CFLAGS   += -mtune=cortex-a75 \
                    -mcpu=cortex-a75+crypto+crc+sha2+aes
 
-endif	
-
-ifdef CONFIG_CC_DISABLE_WARN_MAYBE_UNINITIALIZED
-KBUILD_CFLAGS   += -Wno-maybe-uninitialized
 endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
