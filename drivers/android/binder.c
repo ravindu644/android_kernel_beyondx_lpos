@@ -803,98 +803,6 @@ _binder_node_inner_unlock(struct binder_node *node, int line)
 	spin_unlock(&node->lock);
 }
 
-#ifdef CONFIG_DEBUG_SNAPSHOT_BINDER
-/*
- * Binder Debug Snapshot
- */
-static void init_binder_transaction_base(int type, struct trace_binder_transaction_base *base,
-					 struct binder_transaction *t, struct binder_thread *from,
-					 struct binder_thread *to)
-{
-	struct binder_thread *t_from;
-	struct binder_thread *t_to;
-
-	if (base == NULL)
-		return;
-
-	t_from = t->from ? t->from : (from ? from : NULL);
-	t_to = t->to_thread ? t->to_thread : (to ? to : NULL);
-	base->trace_type = type;
-	base->transaction_id = t->debug_id;
-	base->from_pid = t_from ? t_from->proc->pid : 0;
-	base->from_tid = t_from ? t_from->pid : 0;
-	base->to_pid = t->to_proc ? t->to_proc->pid : 0;
-	base->to_tid = t_to ? t_to->pid : 0;
-	if (t_from) {
-		snprintf(base->from_pid_comm, TASK_COMM_LEN, "%s", t_from->proc->tsk->comm);
-		snprintf(base->from_tid_comm, TASK_COMM_LEN, "%s",  t_from->task->comm);
-	} else {
-		base->from_pid_comm[0] = '\0';
-		base->from_tid_comm[0] = '\0';
-	}
-	if (t->to_proc)
-		snprintf(base->to_pid_comm, TASK_COMM_LEN, "%s", t->to_proc->tsk->comm);
-	else
-		base->to_pid_comm[0] = '\0';
-	if (t_to)
-		snprintf(base->to_tid_comm, TASK_COMM_LEN, "%s", t_to->task->comm);
-	else
-		base->to_tid_comm[0] = '\0';
-}
-
-static void dss_binder_transaction(int reply, struct binder_transaction *t, struct binder_thread *from, int to_node_id)
-{
-	struct trace_binder_transaction_base base;
-	struct trace_binder_transaction transaction;
-
-	init_binder_transaction_base(TRANSACTION, &base, t, from, NULL);
-	transaction.to_node_id = to_node_id;
-	transaction.reply = reply;
-	transaction.flags = t->flags;
-	transaction.code = t->code;
-
-	dbg_snapshot_binder(&base, &transaction, NULL);
-}
-
-static void dss_binder_transaction_received(struct binder_transaction *t, struct binder_thread *to)
-{
-	struct trace_binder_transaction_base base;
-
-	init_binder_transaction_base(TRANSACTION_DONE, &base, t, NULL, to);
-
-	dbg_snapshot_binder(&base, NULL, NULL);
-}
-
-static void dss_binder_transaction_failed(int reply, struct binder_transaction_log_entry *e,
-					  char *from_pid_comm, char *from_tid_comm,
-					  unsigned int flags, unsigned int code)
-{
-	struct trace_binder_transaction_base base;
-	struct trace_binder_transaction transaction;
-	struct trace_binder_transaction_error error;
-
-	base.trace_type = TRANSACTION_ERROR;
-	base.transaction_id = e->debug_id;
-	base.from_pid = e->from_proc;
-	base.from_tid = e->from_thread;
-	base.to_pid = e->to_proc;
-	base.to_tid = e->to_thread;
-	snprintf(base.from_pid_comm, TASK_COMM_LEN, "%s", from_pid_comm);
-	snprintf(base.from_tid_comm, TASK_COMM_LEN, "%s", from_tid_comm);
-	base.to_pid_comm[0] = '\0';
-	base.to_tid_comm[0] = '\0';
-	transaction.to_node_id = e->to_node;
-	transaction.reply = reply;
-	transaction.flags = flags;
-	transaction.code = code;
-	error.return_error = e->return_error;
-	error.return_error_param = e->return_error_param;
-	error.return_error_line = e->return_error_line;
-
-	dbg_snapshot_binder(&base, &transaction, &error);
-}
-#endif /* CONFIG_DEBUG_SNAPSHOT_BINDER */
-
 static bool binder_worklist_empty_ilocked(struct list_head *list)
 {
 	return list_empty(list);
@@ -3384,9 +3292,12 @@ static void binder_transaction(struct binder_proc *proc,
 			goto err_bad_extra_size;
 		}
 	}
+<<<<<<< HEAD
 #ifdef CONFIG_DEBUG_SNAPSHOT_BINDER
 	dss_binder_transaction(reply, t, t->from ? t->from : thread, target_node ? target_node->debug_id : 0);
 #endif
+=======
+>>>>>>> 917ff76a6da2 (binder: nuke debug_snapshot)
 
 	trace_binder_transaction(reply, t, target_node);
 
@@ -3739,9 +3650,6 @@ err_invalid_target_handle:
 		e->return_error = return_error;
 		e->return_error_param = return_error_param;
 		e->return_error_line = return_error_line;
-#ifdef CONFIG_DEBUG_SNAPSHOT_BINDER
-		dss_binder_transaction_failed(reply, e, proc->tsk->comm, thread->task->comm, tr->flags, tr->code);
-#endif
 		fe = binder_transaction_log_add(&binder_transaction_log_failed);
 		*fe = *e;
 		/*
@@ -4636,9 +4544,6 @@ retry:
 		}
 		ptr += trsize;
 
-#ifdef CONFIG_DEBUG_SNAPSHOT_BINDER
-		dss_binder_transaction_received(t, thread);
-#endif
 		trace_binder_transaction_received(t);
 		binder_stat_br(proc, thread, cmd);
 		binder_debug(BINDER_DEBUG_TRANSACTION,
