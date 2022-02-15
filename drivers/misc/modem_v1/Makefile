@@ -9,20 +9,19 @@ obj-$(CONFIG_LINK_DEVICE_MEMORY) += link_device_memory_main.o \
 				    link_device_memory_snapshot.o \
 				    link_device_memory_command.o \
 				    link_device_memory_flow_control.o \
-				    link_device_memory_debug.o
 
 obj-$(CONFIG_LINK_DEVICE_SHMEM) += link_device_shmem.o \
 				   link_device_memory_snapshot.o \
 				   link_device_memory_flow_control.o \
-				   link_device_memory_debug.o \
 				   link_device_memory_sbd.o \
 				   modem_notifier.o
+
+obj-$(CONFIG_DEBUG_KERNEL)	+= link_device_memory_debug.o				   
 
 obj-$(CONFIG_LINK_DEVICE_PCIE) += link_device_pcie.o \
 				   s5100_pcie.o \
 				   link_device_memory_snapshot.o \
 				   link_device_memory_flow_control.o \
-				   link_device_memory_debug.o \
 				   link_device_memory_sbd.o \
 				   modem_notifier.o
 
