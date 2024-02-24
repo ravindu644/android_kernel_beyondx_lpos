@@ -407,6 +407,7 @@ GENKSYMS	= scripts/genksyms/genksyms
 INSTALLKERNEL  := installkernel
 DEPMOD		= /sbin/depmod
 PERL		= perl
+LDLLD       = ld.lld
 PYTHON		= python
 CHECK		= sparse
 
