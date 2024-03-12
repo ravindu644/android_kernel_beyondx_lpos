@@ -12,6 +12,7 @@ work_dir="$(pwd)"
 #path for binary files
 dt_tool="$work_dir/binaries"
 repacker="$dt_tool/AIK/repackimg.sh"
+AVBTOOL="$dt_tool/avbtool"
 
 #setting up executable permissions
 chmod +x -R "$work_dir/binaries"
