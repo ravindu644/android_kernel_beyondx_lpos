@@ -115,6 +115,7 @@ permissive() {
     dirty_build
 
     # Revert changes back to original configuration
+    cd "$work_dir"
     replace_config_option "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "n"
 }
 
