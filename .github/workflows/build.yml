@@ -1,4 +1,4 @@
-name: build
+name: build and release
 
 on:
 
@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
@@ -28,5 +28,5 @@ jobs:
       - name: Upload kernel
         uses: actions/upload-artifact@v3.1.2
         with:
-          name: "LPoS Kernel [v8.5.1] [S10 5G]"
-          path: out/*.tar
+          name: "LPoS [S10 5G]"
+          path: out/*.xz         

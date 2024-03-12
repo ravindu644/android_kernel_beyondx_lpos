@@ -88,9 +88,10 @@ packing() {
     echo -e "\n\n[i] Creating a Flashable tar..!\n\n"
 
     cd "$work_dir/out"
-    mkdir "${SELINUX_STATUS}"
+    mkdir "${DEVICE}/${SELINUX_STATUS}"
     tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img ; rm boot.img dt.img
-    cp *.tar "${SELINUX_STATUS}"
+    mv "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" "${DEVICE}/${SELINUX_STATUS}"
+    rm *.tar
 }
 
 tar_xz() {
