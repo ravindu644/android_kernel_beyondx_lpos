@@ -15,7 +15,7 @@ repacker="$dt_tool/AIK/repackimg.sh"
 AVBTOOL="$dt_tool/avbtool"
 
 #setting up executable permissions
-chmod +x -R "$work_dir/binaries"
+sudo chmod +775 -R "$work_dir/binaries"
 
 #exporting variables
 export DEVICE="S10 5G"
@@ -78,6 +78,7 @@ packing(){
     sign(){
     echo -e "\n\n[+] Signing New Boot image...\n\n" 
     python3 "$AVBTOOL" extract_public_key --key "$work_dir/binaries/key/sign.pem" --output "$work_dir/binaries/key/sign.pub.bin"
+    chmod +777 "$work_dir/out/boot.img"
     python3 "$AVBTOOL" add_hash_footer --partition_name boot --partition_size "$BOOT_SIZE" --image "$work_dir/out/boot.img" --key "$work_dir/binaries/key/sign.pem" --algorithm SHA256_RSA4096
     }
     sign
@@ -130,10 +131,10 @@ do_modules(){
 
 USER_INPUT=$1
 
-if [ $USER_INPUT == "-c" ]; then
+if [ "$USER_INPUT" == "-c" ]; then
     echo -e "\n\n[i] Performing a clean build...\n\n"
     clean_build
-elif [ $USER_INPUT == "-d" ]; then
+elif [ "$USER_INPUT" == "-d" ]; then
     echo -e "\n\n[i] Performing a dirty build...\n\n"
     dirty_build
 else
