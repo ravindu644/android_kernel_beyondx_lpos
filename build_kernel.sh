@@ -92,9 +92,11 @@ packing() {
     cd "$work_dir/out"
 
     if [ ! -d "$DEVICE" ]; then
-        mkdir "${DEVICE}" ; mkdir "${DEVICE}/${SELINUX_STATUS}"
+        mkdir "${DEVICE}"
     fi
-
+    if [ ! -d "${DEVICE}/${SELINUX_STATUS}" ]; then
+        mkdir "${DEVICE}/${SELINUX_STATUS}"
+    fi
     tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img ; rm boot.img dt.img
     mv "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" "${DEVICE}/${SELINUX_STATUS}"
 }
