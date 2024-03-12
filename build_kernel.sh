@@ -15,7 +15,7 @@ repacker="$dt_tool/AIK/repackimg.sh"
 AVBTOOL="$dt_tool/avbtool"
 
 #setting up executable permissions
-sudo chmod +775 -R "$work_dir/binaries"
+sudo chmod +775 -R "$work_dir/binaries/"
 
 #exporting variables
 export DEVICE="S10 5G"
@@ -59,6 +59,8 @@ dtb_img() {
 
 packing() {
     echo -e "\n\n[+] Repacking boot.img...\n\n"
+    cd "$dt_tool/AIK/ramdisk" ; mkdir debug_ramdisk dev metadata mnt proc second_stage_resources sys
+    cd "$work_dir"
     sudo bash "$repacker"
     echo -e "\n\n[+] Repacking Done..!\n\n"
     mv "$dt_tool/AIK/image-new.img" "$work_dir/out/boot.img"
