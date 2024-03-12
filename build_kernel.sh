@@ -53,80 +53,88 @@ export RECOVERY_SIZE="67633152"
 rm -rf out && mkdir out
 
 dtb_img() {
-	chmod +777 $dt_tool/* -R
-	$dt_tool/mkdtimg cfg_create "$work_dir/out/dt.img" "$dt_tool/exynos9820.cfg" -d "$work_dir/arch/arm64/boot/dts/exynos"
-	
-	}
+    chmod +777 $dt_tool/* -R
+    $dt_tool/mkdtimg cfg_create "$work_dir/out/dt.img" "$dt_tool/exynos9820.cfg" -d "$work_dir/arch/arm64/boot/dts/exynos"
+}
 
-packing(){
+packing() {
     echo -e "\n\n[+] Repacking boot.img...\n\n"
     sudo bash "$repacker"
     echo -e "\n\n[+] Repacking Done..!\n\n"
     mv "$dt_tool/AIK/image-new.img" "$work_dir/out/boot.img"
 
-    key(){
-    if [ ! -d "$work_dir/binaries/key" ]; then
-        mkdir "$work_dir/binaries/key"
-    fi
-    if [ ! -f "$work_dir/binaries/key/sign.pem" ]; then
-        echo -e "\n\n[+] Generating a signing key..\n\n"    
-        openssl genrsa -f4 -out "$work_dir/binaries/key/sign.pem" 4096
-    fi
+    key() {
+        if [ ! -d "$work_dir/binaries/key" ]; then
+            mkdir "$work_dir/binaries/key"
+        fi
+        if [ ! -f "$work_dir/binaries/key/sign.pem" ]; then
+            echo -e "\n\n[+] Generating a signing key..\n\n"
+            openssl genrsa -f4 -out "$work_dir/binaries/key/sign.pem" 4096
+        fi
     }
     key
 
-    sign(){
-    echo -e "\n\n[+] Signing New Boot image...\n\n" 
-    python3 "$AVBTOOL" extract_public_key --key "$work_dir/binaries/key/sign.pem" --output "$work_dir/binaries/key/sign.pub.bin"
-    chmod +777 "$work_dir/out/boot.img"
-    python3 "$AVBTOOL" add_hash_footer --partition_name boot --partition_size "$BOOT_SIZE" --image "$work_dir/out/boot.img" --key "$work_dir/binaries/key/sign.pem" --algorithm SHA256_RSA4096
+    sign() {
+        echo -e "\n\n[+] Signing New Boot image...\n\n"
+        python3 "$AVBTOOL" extract_public_key --key "$work_dir/binaries/key/sign.pem" --output "$work_dir/binaries/key/sign.pub.bin"
+        chmod +777 "$work_dir/out/boot.img"
+        python3 "$AVBTOOL" add_hash_footer --partition_name boot --partition_size "$BOOT_SIZE" --image "$work_dir/out/boot.img" --key "$work_dir/binaries/key/sign.pem" --algorithm SHA256_RSA4096
     }
     sign
 
     echo -e "\n\n[+] Signing Done..!\n\n"
     echo -e "\n\n[i] Creating a Flashable tar..!\n\n"
 
-    cd "$work_dir/out" ; tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img
-
-    echo -e "\n\n[+] Build Finished..!\n\n"
-
+    cd "$work_dir/out" || exit
+    tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img
 }
 
-checks(){
+checks() {
     if [ -f "$dt_tool/AIK/split_img/boot.img-kernel" ]; then
         echo -e "\n\n[i] Task Finished ! \n"
-        packing 
+        packing
     else
-        echo -e "\n\n[i] Build Failed :( \n" 
+        echo -e "\n\n[i] Build Failed :( \n"
         exit 1
     fi
 }
 
+permissive() {
+    config_file="arch/arm64/configs/$exynos_defconfig"
+    backup_file="$config_file.backup"
+    cp "$config_file" "$backup_file"
+
+    replace_config_option() {
+        sed -i "s/^$1=.*/$1=$2/" "$config_file"
+    }
+
+    replace_config_option "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "y"
+    export SELINUX_STATUS="Permissive"
+    dirty_build
+
+    # Revert changes back to original configuration
+    mv "$backup_file" "$config_file"
+}
+
 clean_build() {
     make ${ARGS} clean && make ${ARGS} mrproper
-    make ${ARGS} $exynos_defconfig
+    make ${ARGS} "$exynos_defconfig"
     make ${ARGS} menuconfig
-    make ${ARGS} -j$(nproc)
+    make ${ARGS} -j"$(nproc)"
     dtb_img
     mv "$work_dir/arch/arm64/boot/Image" "$dt_tool/AIK/split_img/boot.img-kernel"
-    checks   
+    export SELINUX_STATUS="Enforcing"
+    checks
+    permissive
 }
 
 dirty_build() {
-    make ${ARGS} $exynos_defconfig
+    make ${ARGS} "$exynos_defconfig"
     make ${ARGS} menuconfig
-    make ${ARGS} -j$(nproc)
+    make ${ARGS} -j"$(nproc)"
     dtb_img
     mv "$work_dir/arch/arm64/boot/Image" "$dt_tool/AIK/split_img/boot.img-kernel"
-    checks      
-}
-
-
-#to copy all the kernel modules (.ko) to "modules" folder.
-do_modules(){
-    mkdir -p modules
-    find . -type f -name "*.ko" -exec cp -n {} modules \;
-    echo "Module files copied to the 'modules' folder." 
+    checks
 }
 
 USER_INPUT=$1
