@@ -88,8 +88,19 @@ packing() {
     echo -e "\n\n[i] Creating a Flashable tar..!\n\n"
 
     cd "$work_dir/out"
-    tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img
+    mkdir "${SELINUX_STATUS}"
+    tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img ; rm boot.img dt.img
+    cp *.tar "${SELINUX_STATUS}"
 }
+
+tar_xz() {
+    cd "$work_dir/out"
+    tar -cvf "LPoS [${DEVICE}].tar" ./*
+    xz -9 --threads=0 "LPoS [${DEVICE}].tar"
+    mv "LPoS [${DEVICE}].tar.xz" "LPoS [${DEVICE}].xz"
+    cd "$work_dir"
+}
+
 
 checks() {
     if [ -f "$dt_tool/AIK/split_img/boot.img-kernel" ]; then
@@ -125,18 +136,17 @@ permissive() {
 clean_build() {
     make ${ARGS} clean && make ${ARGS} mrproper
     make ${ARGS} "$exynos_defconfig"
-    make ${ARGS} menuconfig
     make ${ARGS} -j"$(nproc)"
     dtb_img
     mv "$work_dir/arch/arm64/boot/Image" "$dt_tool/AIK/split_img/boot.img-kernel"
     export SELINUX_STATUS="Enforcing"
     checks
     permissive
+    tar_xz
 }
 
 dirty_build() {
     make ${ARGS} "$exynos_defconfig"
-    make ${ARGS} menuconfig
     make ${ARGS} -j"$(nproc)"
     dtb_img
     mv "$work_dir/arch/arm64/boot/Image" "$dt_tool/AIK/split_img/boot.img-kernel"
