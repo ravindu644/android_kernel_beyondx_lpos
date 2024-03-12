@@ -12,14 +12,14 @@ work_dir="$(pwd)"
 #path for binary files
 dt_tool="$work_dir/binaries"
 repacker="$dt_tool/AIK/repackimg.sh"
+AVBTOOL="$dt_tool/avbtool"
 
 #setting up executable permissions
-chmod +x -R "$work_dir/binaries"
+sudo chmod +775 -R "$work_dir/binaries/"
 
 #exporting variables
 export DEVICE="S10 5G"
-export KERNEL_VERSION="v8.5.1"
-
+export KBUILD_BUILD_USER="@ravindu644"
 export ARGS="
 ARCH=arm64
 PLATFORM_VERSION=12
@@ -52,87 +52,120 @@ export RECOVERY_SIZE="67633152"
 rm -rf out && mkdir out
 
 dtb_img() {
-	chmod +777 $dt_tool/* -R
-	$dt_tool/mkdtimg cfg_create "$work_dir/out/dt.img" "$dt_tool/exynos9820.cfg" -d "$work_dir/arch/arm64/boot/dts/exynos"
-	
-	}
+    sudo chmod +777 $dt_tool/* -R
+    $dt_tool/mkdtimg cfg_create "$work_dir/out/dt.img" "$dt_tool/exynos9820.cfg" -d "$work_dir/arch/arm64/boot/dts/exynos"
+}
 
-packing(){
-    echo -e "\n\n[+] Repacking boot.img...\n\n"
+packing() {
+    echo -e "\n\n[+] Repacking boot.img..."
+    cd "$dt_tool/AIK/ramdisk"
+    if [ ! -d "debug_ramdisk" ]; then
+        mkdir -p debug_ramdisk dev metadata mnt proc second_stage_resources sys
+    fi
+    cd "$work_dir"
     sudo bash "$repacker"
-    echo -e "\n\n[+] Repacking Done..!\n\n"
+    echo -e "\n\n[+] Repacking Done..!"
     mv "$dt_tool/AIK/image-new.img" "$work_dir/out/boot.img"
 
-    key(){
-    if [ ! -d "$work_dir/binaries/key" ]; then
-        mkdir "$work_dir/binaries/key"
-    fi
-    if [ ! -f "$work_dir/binaries/key/sign.pem" ]; then
-        echo -e "\n\n[+] Generating a signing key..\n\n"    
-        openssl genrsa -f4 -out "$work_dir/binaries/key/sign.pem" 4096
-    fi
+    key() {
+        if [ ! -d "$work_dir/binaries/key" ]; then
+            mkdir "$work_dir/binaries/key"
+        fi
+        if [ ! -f "$work_dir/binaries/key/sign.pem" ]; then
+            echo -e "\n\n[+] Generating a signing key.."
+            openssl genrsa -f4 -out "$work_dir/binaries/key/sign.pem" 4096
+        fi
     }
     key
 
-    sign(){
-    echo -e "\n\n[+] Signing New Boot image...\n\n" 
-    python3 "$AVBTOOL" extract_public_key --key "$work_dir/binaries/key/sign.pem" --output "$work_dir/binaries/key/sign.pub.bin"
-    python3 "$AVBTOOL" add_hash_footer --partition_name boot --partition_size "$BOOT_SIZE" --image "$work_dir/out/boot.img" --key "$work_dir/binaries/key/sign.pem" --algorithm SHA256_RSA4096
+    sign() {
+        echo -e "\n\n[+] Signing New Boot image..."
+        python3 "$AVBTOOL" extract_public_key --key "$work_dir/binaries/key/sign.pem" --output "$work_dir/binaries/key/sign.pub.bin"
+        sudo chmod +777 "$work_dir/out/boot.img"
+        python3 "$AVBTOOL" add_hash_footer --partition_name boot --partition_size "$BOOT_SIZE" --image "$work_dir/out/boot.img" --key "$work_dir/binaries/key/sign.pem" --algorithm SHA256_RSA4096
     }
     sign
 
-    echo -e "\n\n[+] Signing Done..!\n\n"
-    echo -e "\n\n[i] Creating a Flashable tar..!\n\n"
+    echo -e "\n\n[+] Signing Done..!"
+    echo -e "\n\n[i] Creating a Flashable tar..!"
 
-    cd "$work_dir/out" ; tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img
+    cd "$work_dir/out"
 
-    echo -e "\n\n[+] Build Finished..!\n\n"
+    if [ ! -d "$DEVICE" ]; then
+        mkdir "${DEVICE}" ; mkdir "${DEVICE}/${SELINUX_STATUS}"
+    fi
 
+    tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img ; rm boot.img dt.img
+    mv "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" "${DEVICE}/${SELINUX_STATUS}"
 }
 
-checks(){
+tar_xz() {
+    cd "$work_dir/out"
+    tar -cvf "LPoS [${DEVICE}].tar" ./*
+    xz -9 --threads=0 "LPoS [${DEVICE}].tar"
+    mv "LPoS [${DEVICE}].tar.xz" "LPoS [${DEVICE}].xz"
+    cd "$work_dir"
+    echo -e "\n\n[i] Compilation Done..🌛"
+}
+
+
+checks() {
     if [ -f "$dt_tool/AIK/split_img/boot.img-kernel" ]; then
         echo -e "\n\n[i] Task Finished ! \n"
-        packing 
+        packing
     else
-        echo -e "\n\n[i] Build Failed :( \n" 
+        echo -e "\n\n[i] Build Failed :( \n"
         exit 1
     fi
 }
 
+permissive() {
+    cd "$work_dir"
+    config_file="arch/arm64/configs/$exynos_defconfig"
+
+    replace_config_option() {
+        sed -i "s/^$1=.*/$1=$2/" "$config_file"
+    }
+
+    # Modify configuration to enable SELinux permissive mode
+    replace_config_option "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "y"
+    export SELINUX_STATUS="Permissive"
+
+    # Perform dirty build
+    dirty_build
+
+    # Revert changes back to original configuration
+    cd "$work_dir"
+    replace_config_option "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "n"
+}
+
+
 clean_build() {
     make ${ARGS} clean && make ${ARGS} mrproper
-    make ${ARGS} $exynos_defconfig
-    make ${ARGS} menuconfig
-    make ${ARGS} -j$(nproc)
+    make ${ARGS} "$exynos_defconfig"
+    make ${ARGS} -j"$(nproc)"
     dtb_img
     mv "$work_dir/arch/arm64/boot/Image" "$dt_tool/AIK/split_img/boot.img-kernel"
-    checks   
+    export SELINUX_STATUS="Enforcing"
+    checks
+    permissive
+    tar_xz
 }
 
 dirty_build() {
-    make ${ARGS} $exynos_defconfig
-    make ${ARGS} menuconfig
-    make ${ARGS} -j$(nproc)
+    make ${ARGS} "$exynos_defconfig"
+    make ${ARGS} -j"$(nproc)"
     dtb_img
     mv "$work_dir/arch/arm64/boot/Image" "$dt_tool/AIK/split_img/boot.img-kernel"
-    checks      
-}
-
-
-#to copy all the kernel modules (.ko) to "modules" folder.
-do_modules(){
-    mkdir -p modules
-    find . -type f -name "*.ko" -exec cp -n {} modules \;
-    echo "Module files copied to the 'modules' folder." 
+    checks
 }
 
 USER_INPUT=$1
 
-if [ $USER_INPUT == "-c" ]; then
+if [ "$USER_INPUT" == "-c" ]; then
     echo -e "\n\n[i] Performing a clean build...\n\n"
     clean_build
-elif [ $USER_INPUT == "-d" ]; then
+elif [ "$USER_INPUT" == "-d" ]; then
     echo -e "\n\n[i] Performing a dirty build...\n\n"
     dirty_build
 else
