@@ -53,7 +53,7 @@ export RECOVERY_SIZE="67633152"
 rm -rf out && mkdir out
 
 dtb_img() {
-    chmod +777 $dt_tool/* -R
+    sudo chmod +777 $dt_tool/* -R
     $dt_tool/mkdtimg cfg_create "$work_dir/out/dt.img" "$dt_tool/exynos9820.cfg" -d "$work_dir/arch/arm64/boot/dts/exynos"
 }
 
@@ -77,7 +77,7 @@ packing() {
     sign() {
         echo -e "\n\n[+] Signing New Boot image...\n\n"
         python3 "$AVBTOOL" extract_public_key --key "$work_dir/binaries/key/sign.pem" --output "$work_dir/binaries/key/sign.pub.bin"
-        chmod +777 "$work_dir/out/boot.img"
+        sudo chmod +777 "$work_dir/out/boot.img"
         python3 "$AVBTOOL" add_hash_footer --partition_name boot --partition_size "$BOOT_SIZE" --image "$work_dir/out/boot.img" --key "$work_dir/binaries/key/sign.pem" --algorithm SHA256_RSA4096
     }
     sign
@@ -85,7 +85,7 @@ packing() {
     echo -e "\n\n[+] Signing Done..!\n\n"
     echo -e "\n\n[i] Creating a Flashable tar..!\n\n"
 
-    cd "$work_dir/out" || exit
+    cd "$work_dir/out"
     tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img
 }
 
@@ -100,6 +100,7 @@ checks() {
 }
 
 permissive() {
+    cd $work_dir
     config_file="arch/arm64/configs/$exynos_defconfig"
     backup_file="$config_file.backup"
     cp "$config_file" "$backup_file"
