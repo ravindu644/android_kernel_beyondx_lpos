@@ -19,7 +19,6 @@ sudo chmod +775 -R "$work_dir/binaries/"
 
 #exporting variables
 export DEVICE="S10 5G"
-export KERNEL_VERSION="v8.5.1"
 
 export ARGS="
 ARCH=arm64
