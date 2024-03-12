@@ -100,22 +100,24 @@ checks() {
 }
 
 permissive() {
-    cd $work_dir
+    cd "$work_dir"
     config_file="arch/arm64/configs/$exynos_defconfig"
-    backup_file="$config_file.backup"
-    cp "$config_file" "$backup_file"
 
     replace_config_option() {
         sed -i "s/^$1=.*/$1=$2/" "$config_file"
     }
 
+    # Modify configuration to enable SELinux permissive mode
     replace_config_option "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "y"
     export SELINUX_STATUS="Permissive"
+
+    # Perform dirty build
     dirty_build
 
     # Revert changes back to original configuration
-    mv "$backup_file" "$config_file"
+    replace_config_option "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "n"
 }
+
 
 clean_build() {
     make ${ARGS} clean && make ${ARGS} mrproper
