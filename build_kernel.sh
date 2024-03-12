@@ -19,7 +19,7 @@ sudo chmod +775 -R "$work_dir/binaries/"
 
 #exporting variables
 export DEVICE="S10 5G"
-
+export KBUILD_BUILD_USER="@ravindu644"
 export ARGS="
 ARCH=arm64
 PLATFORM_VERSION=12
@@ -57,11 +57,14 @@ dtb_img() {
 }
 
 packing() {
-    echo -e "\n\n[+] Repacking boot.img...\n\n"
-    cd "$dt_tool/AIK/ramdisk" ; mkdir debug_ramdisk dev metadata mnt proc second_stage_resources sys
+    echo -e "\n\n[+] Repacking boot.img..."
+    cd "$dt_tool/AIK/ramdisk"
+    if [ ! -d "debug_ramdisk" ]; then
+        mkdir -p debug_ramdisk dev metadata mnt proc second_stage_resources sys
+    fi
     cd "$work_dir"
     sudo bash "$repacker"
-    echo -e "\n\n[+] Repacking Done..!\n\n"
+    echo -e "\n\n[+] Repacking Done..!"
     mv "$dt_tool/AIK/image-new.img" "$work_dir/out/boot.img"
 
     key() {
@@ -69,28 +72,31 @@ packing() {
             mkdir "$work_dir/binaries/key"
         fi
         if [ ! -f "$work_dir/binaries/key/sign.pem" ]; then
-            echo -e "\n\n[+] Generating a signing key..\n\n"
+            echo -e "\n\n[+] Generating a signing key.."
             openssl genrsa -f4 -out "$work_dir/binaries/key/sign.pem" 4096
         fi
     }
     key
 
     sign() {
-        echo -e "\n\n[+] Signing New Boot image...\n\n"
+        echo -e "\n\n[+] Signing New Boot image..."
         python3 "$AVBTOOL" extract_public_key --key "$work_dir/binaries/key/sign.pem" --output "$work_dir/binaries/key/sign.pub.bin"
         sudo chmod +777 "$work_dir/out/boot.img"
         python3 "$AVBTOOL" add_hash_footer --partition_name boot --partition_size "$BOOT_SIZE" --image "$work_dir/out/boot.img" --key "$work_dir/binaries/key/sign.pem" --algorithm SHA256_RSA4096
     }
     sign
 
-    echo -e "\n\n[+] Signing Done..!\n\n"
-    echo -e "\n\n[i] Creating a Flashable tar..!\n\n"
+    echo -e "\n\n[+] Signing Done..!"
+    echo -e "\n\n[i] Creating a Flashable tar..!"
 
     cd "$work_dir/out"
-    mkdir "${DEVICE}" ; mkdir "${DEVICE}/${SELINUX_STATUS}"
+
+    if [ ! -d "$DEVICE" ]; then
+        mkdir "${DEVICE}" ; mkdir "${DEVICE}/${SELINUX_STATUS}"
+    fi
+
     tar -cvf "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" boot.img dt.img ; rm boot.img dt.img
     mv "LPoS ${KERNEL_VERSION} [${DEVICE}] - ${SELINUX_STATUS}.tar" "${DEVICE}/${SELINUX_STATUS}"
-    rm *.tar
 }
 
 tar_xz() {
@@ -99,6 +105,7 @@ tar_xz() {
     xz -9 --threads=0 "LPoS [${DEVICE}].tar"
     mv "LPoS [${DEVICE}].tar.xz" "LPoS [${DEVICE}].xz"
     cd "$work_dir"
+    echo -e "\n\n[i] Compilation Done..🌛"
 }
 
 
