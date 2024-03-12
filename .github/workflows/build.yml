@@ -1,8 +1,11 @@
 name: build and release
 
 on:
-
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: true
 
 jobs:
   build:
@@ -28,5 +31,5 @@ jobs:
       - name: Upload kernel
         uses: actions/upload-artifact@v3.1.2
         with:
-          name: "LPoS [S10 5G]"
-          path: out/*.xz         
+          name: "LPoS ${{ github.event.inputs.version }} [S10 5G]"
+          path: out/*.xz
