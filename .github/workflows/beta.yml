@@ -1,6 +1,7 @@
 name: build and release
 
 on:
+
   workflow_dispatch:
 
 jobs:
@@ -24,12 +25,6 @@ jobs:
           export PATH=$HOME/:$PWD/toolchain/proton-clang/bin:$PATH
           bash build_kernel.sh -c
 
-      - name: Generate changelog
-        id: changelog
-        run: |
-          git fetch --tags --force
-          git log --format="%h - %s (%an)" $(git describe --tags --abbrev=0)..HEAD > changelog.txt
-
       - name: Upload kernel
         uses: actions/upload-artifact@v3.1.2
         with:
@@ -41,8 +36,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            out/*.tar
-          body: |
-            $(cat changelog.txt)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            out/*.tar.xz            
