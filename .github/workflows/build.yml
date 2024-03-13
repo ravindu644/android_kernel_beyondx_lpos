@@ -6,6 +6,10 @@ on:
       version:
         description: 'Version number'
         required: true
+        
+      tag:
+        description: 'Release Tag'
+        required: true        
 
 jobs:
   build:
@@ -25,7 +29,7 @@ jobs:
           
       - name: Set environment variable
         run: |
-          echo "LPOS_KERNEL_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          echo "LPOS_KERNEL_VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
           
       - name: Building LPoS
         run: |
@@ -48,10 +52,10 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.ref }}
+          tag: ${{ github.event.inputs.tag }}
           name: "LPoS Kernel ${{ env.LPOS_KERNEL_VERSION }}"
           draft: false
           prerelease: false
           token: ${{ secrets.TOKEN }}          
           artifacts: "out/LPoS*.xz,out/KSU*.xz"
-          body: "Commit SHA: {{ github.sha }}"
+          body: "Commit SHA: ${{ github.sha }}"
