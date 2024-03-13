@@ -2,11 +2,7 @@ name: build and release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version number'
-        required: true
-        
+    inputs:      
       tag:
         description: 'Release Tag'
         required: true        
@@ -14,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write    
 
     steps:
       - name: Checkout source
