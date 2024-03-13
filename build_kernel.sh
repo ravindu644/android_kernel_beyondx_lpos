@@ -19,7 +19,7 @@ sudo chmod +775 -R "$work_dir/binaries/"
 
 #exporting variables
 export current_datetime=$(date +"%Y-%m-%d_%H-%M-%S")
-export LPOS_KERNEL_VERSION="v8.5.7"
+#export LPOS_KERNEL_VERSION="v8.5.7"
 export DEVICE="S10 5G"
 export KBUILD_BUILD_USER="@ravindu644"
 export ARGS="
