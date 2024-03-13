@@ -19,7 +19,7 @@ sudo chmod +775 -R "$work_dir/binaries/"
 
 #creating out folder
 if [ ! -d "$work_dir/out" ]; then
-    cd "$work_dir/out"
+    mkdir "$work_dir/out"
 fi    
 
 #exporting variables
