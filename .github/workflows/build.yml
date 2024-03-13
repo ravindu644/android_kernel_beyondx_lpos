@@ -25,7 +25,7 @@ jobs:
           
       - name: Set environment variable
         run: |
-          echo "KERNEL_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          echo "LPOS_KERNEL_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
           
       - name: Building LPoS
         run: |
@@ -40,7 +40,7 @@ jobs:
       - name: Upload kernel
         uses: actions/upload-artifact@v3.1.2
         with:
-          name: "LPoS ${{ env.KERNEL_VERSION }} [S10 5G]"
+          name: "LPoS ${{ env.LPOS_KERNEL_VERSION }} [S10 5G]"
           path: |
             out/LPoS*.xz
             out/KSU*.xz
