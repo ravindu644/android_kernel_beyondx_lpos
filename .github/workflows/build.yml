@@ -44,3 +44,10 @@ jobs:
           path: |
             out/LPoS*.xz
             out/KSU*.xz
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          name: "LPoS Kernel ${{ env.LPOS_KERNEL_VERSION }}"
+          artifacts: "out/LPoS*.xz,out/KSU*.xz"
+          body: "Commit SHA: {{ github.sha }}"
