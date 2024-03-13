@@ -18,9 +18,7 @@ export VBMETA="$dt_tool/addons/vbmeta.img"
 sudo chmod +775 -R "$work_dir/binaries/"
 
 #creating out folder
-if [ ! -d "$work_dir/out" ]; then
-    mkdir "$work_dir/out"
-fi    
+mkdir out || true 
 
 #exporting variables
 export current_datetime=$(date +"%Y-%m-%d_%H-%M-%S")
