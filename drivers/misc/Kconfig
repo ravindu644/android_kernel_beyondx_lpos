@@ -567,4 +567,5 @@ source "drivers/misc/modem_v1_dual/Kconfig"
 source "drivers/misc/tzdev/Kconfig"
 source "drivers/misc/tui/Kconfig"
 source "drivers/misc/dev_ril_bridge/Kconfig"
+source "drivers/misc/kprofiles/Kconfig"
 endmenu
