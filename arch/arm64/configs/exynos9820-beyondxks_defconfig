@@ -5703,7 +5703,7 @@ CONFIG_SPU_VERIFY=y
 #
 # KernelSU
 #
-# CONFIG_KSU is not set
+CONFIG_KSU=n
 
 #
 # Firmware Drivers
