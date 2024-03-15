@@ -3291,12 +3291,6 @@ static void binder_transaction(struct binder_proc *proc,
 			goto err_bad_extra_size;
 		}
 	}
-<<<<<<< HEAD
-#ifdef CONFIG_DEBUG_SNAPSHOT_BINDER
-	dss_binder_transaction(reply, t, t->from ? t->from : thread, target_node ? target_node->debug_id : 0);
-#endif
-=======
->>>>>>> 917ff76a6da2 (binder: nuke debug_snapshot)
 
 	trace_binder_transaction(reply, t, target_node);
 
