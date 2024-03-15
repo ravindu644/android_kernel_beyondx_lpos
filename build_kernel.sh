@@ -4,7 +4,7 @@
 ln -s /usr/bin/python2.7 "$HOME/python"
 
 #exporting clang path
-export PATH="$HOME/":"$HOME/toolchain/proton-clang-12/bin":$PATH
+PATH=$PWD/toolchain/bin:$PATH
 
 #saving current pwd as a variable
 export work_dir="$(pwd)"
@@ -290,8 +290,8 @@ build_ksu(){
 
 USER_INPUT=$1
 
-if [ "$USER_INPUT" == "-c" ]; then
-    echo -e "\n\n[i] Performing a clean build...\n\n"
+if [ "$USER_INPUT" == "-clean" ]; then
+    echo -e "\n\n[i] Performing a clean build (without ksu) ...\n\n"
     clean_build
 elif [ "$USER_INPUT" == "-d" ]; then
     echo -e "\n\n[i] Performing a dirty build...\n\n"
@@ -299,7 +299,7 @@ elif [ "$USER_INPUT" == "-d" ]; then
 elif [ "$USER_INPUT" == "-x" ]; then
     echo -e "\n\n[i] Cleaning the source...\n\n"
     deep_clean 
-elif [ "$USER_INPUT" == "-k" ]; then
+elif [ "$USER_INPUT" == "-ksu" ]; then
     echo -e "\n\n[i] Building KernelSU...\n\n"
     build_ksu       
 else

@@ -2,7 +2,7 @@ name: build and release
 
 on:
   workflow_dispatch:
-    inputs:      
+    inputs:
       tag:
         description: 'Release Tag'
         required: true        
@@ -10,9 +10,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write    
-
+    strategy:
+      fail-fast: false
+      matrix:
+        varient: [ksu, clean]
+    name: "🚧 Build for ${{matrix.varient}}"
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -29,15 +31,9 @@ jobs:
         run: |
           echo "LPOS_KERNEL_VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
           
-      - name: Building LPoS
+      - name: Building LPoS ${{matrix.varient}} 
         run: |
-          export PATH=$HOME/:$PWD/toolchain/bin:$PATH
-          bash build_kernel.sh -c
-
-      - name: Building LPoS + KernelSU
-        run: |
-          export PATH=$HOME/:$PWD/toolchain/proton-clang/bin:$PATH
-          bash build_kernel.sh -k          
+          bash build_kernel.sh -${{matrix.varient}}
 
       - name: Upload kernel
         uses: actions/upload-artifact@v4
