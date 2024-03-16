@@ -2737,6 +2737,7 @@ out:
 		zram_set_handle(zram, index, handle);
 		zram_set_obj_size(zram, index, comp_len);
 #ifdef CONFIG_ZRAM_LRU_WRITEBACK
+	#ifdef CONFIG_MEMCG
 		if (!page->mem_cgroup ||
 		    page->mem_cgroup->swappiness != NON_LRU_SWAPPINESS) {
 			spin_lock_irqsave(&zram->list_lock, irq_flags);
@@ -2745,6 +2746,7 @@ out:
 			zram_set_flag(zram, index, ZRAM_LRU);
 			atomic64_inc(&zram->stats.lru_pages);
 		}
+	#endif
 #endif
 	}
 	zram_slot_unlock(zram, index);
