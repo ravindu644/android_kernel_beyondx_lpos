@@ -64,13 +64,14 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           document: "out/LPoS*.xz,out/KSU*.xz"
-          message: |
-            New Build found..!
+          format: html
+          message_file: |
+            <b>New Build found..! 🎉</b>
 
-            Device : S10 5G            
+            <b>Device :</b> S10 5G            
             
-            Repository: ${{ github.repository }}
+            <b>Repository:</b> ${{ github.repository }}
             
-            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            <b>Commit SHA:</b> <a href="https://github.com/${{ github.repository }}/commit/${{github.sha}}">Click here</a>
             
-            Installation : https://telegra.ph/LPoS-Kernel-Installation-Guide-02-09
+            <b>Installation :</b> <a href="https://telegra.ph/LPoS-Kernel-Installation-Guide-02-09">Click here</a>
