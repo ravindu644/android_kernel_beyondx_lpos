@@ -65,6 +65,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           document: "out/LPoS*.xz,out/KSU*.xz"
           format: html
+          disable_web_page_preview: true
           message: |
             <b>New Build found..! 🎉</b>
 
