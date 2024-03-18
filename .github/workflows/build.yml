@@ -65,7 +65,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           document: "out/LPoS*.xz,out/KSU*.xz"
           format: html
-          message_file: |
+          message: |
             <b>New Build found..! 🎉</b>
 
             <b>Device :</b> S10 5G            
