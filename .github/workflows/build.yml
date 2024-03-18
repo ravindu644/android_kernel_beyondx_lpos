@@ -57,3 +57,21 @@ jobs:
           token: ${{ secrets.TOKEN }}          
           artifacts: "out/LPoS*.xz,out/KSU*.xz"
           body: "Commit SHA: ${{ github.sha }}"
+
+      - name: Upload to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          document: "out/LPoS*.xz,out/KSU*.xz"
+          format: html
+          message_file: |
+            <b>New Build found..! 🎉</b>
+
+            <b>Device :</b> S10 5G            
+            
+            <b>Repository:</b> ${{ github.repository }}
+            
+            <b>Commit SHA:</b> <a href="https://github.com/${{ github.repository }}/commit/${{github.sha}}">Click here</a>
+            
+            <b>Installation :</b> <a href="https://telegra.ph/LPoS-Kernel-Installation-Guide-02-09">Click here</a>
