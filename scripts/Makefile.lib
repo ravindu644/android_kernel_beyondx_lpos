@@ -281,10 +281,7 @@ DTC_FLAGS += -@
 
 # Disable noisy checks by default
 ifeq ($(KBUILD_ENABLE_EXTRA_GCC_CHECKS),)
-DTC_FLAGS += -Wno-unit_address_vs_reg \
-	-Wno-pci_device_reg \
-	-Wno-avoid_default_addr_size \
-	-Wno-reg_format
+DTC_FLAGS += -Wno-unit_address_vs_reg
 endif
 
 # Generate an assembly file to wrap the output of the device tree compiler
