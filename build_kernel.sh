@@ -83,8 +83,8 @@ packing() {
 tar_xz() {
     cd "$work_dir/out"
     tar -cvf "LPoS [${DEVICE}].tar" ./*
-    xz -9 --threads=0 "LPoS [${DEVICE}].tar"
-    mv "LPoS [${DEVICE}].tar.xz" "LPoS [${DEVICE}]-${current_datetime}.xz"
+    zip "LPoS [${DEVICE}].tar.zip" "LPoS [${DEVICE}].tar"
+    mv "LPoS [${DEVICE}].tar.zip" "LPoS [${DEVICE}]-${current_datetime}.tar.zip"
     cd "$work_dir"
     echo -e "\n\n[i] Compilation Done..🌛"
 }
@@ -266,8 +266,8 @@ build_ksu(){
     tar_xz_ksu() {
         cd "$work_dir/out"
         tar -cvf "LPoS [${DEVICE}][KSU].tar" "${DEVICE}-KSU"
-        xz -9 --threads=0 "LPoS [${DEVICE}][KSU].tar"
-        mv "LPoS [${DEVICE}][KSU].tar.xz" "KSU-LPoS [${DEVICE}]-${current_datetime}.xz"
+        zip "LPoS [${DEVICE}][KSU].tar".zip "LPoS [${DEVICE}][KSU].tar"
+        mv "LPoS [${DEVICE}][KSU].tar".zip "KSU-LPoS [${DEVICE}]-${current_datetime}.tar.zip"
         cd "$work_dir"
         echo -e "\n\n[i] KSU Compilation Done..🌛\n"
     }
