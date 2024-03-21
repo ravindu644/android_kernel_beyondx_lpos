@@ -267,7 +267,7 @@ build_ksu(){
         cd "$work_dir/out"
         tar -cvf "LPoS [${DEVICE}][KSU].tar" "${DEVICE}-KSU"
         zip "LPoS [${DEVICE}][KSU].tar".zip "LPoS [${DEVICE}][KSU].tar"
-        mv "LPoS [${DEVICE}][KSU].tar".zip "KSU-LPoS [${DEVICE}]-${current_datetime}.tar.zip"
+        mv "LPoS [${DEVICE}][KSU].tar.zip" "KSU-LPoS [${DEVICE}]-${current_datetime}.tar.zip"
         cd "$work_dir"
         echo -e "\n\n[i] KSU Compilation Done..🌛\n"
     }
