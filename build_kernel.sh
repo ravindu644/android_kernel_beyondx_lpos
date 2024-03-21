@@ -82,7 +82,6 @@ packing() {
 
 tar_xz() {
     cd "$work_dir/out"
-    tar -cvf "LPoS [${DEVICE}].tar" ./*
     zip -r -9 "LPoS [${DEVICE}].zip" "${DEVICE}"
     mv "LPoS [${DEVICE}].zip" "LPoS [${DEVICE}]-${current_datetime}.zip"
     cd "$work_dir"
@@ -265,7 +264,6 @@ build_ksu(){
 
     tar_xz_ksu() {
         cd "$work_dir/out"
-        #tar -cvf "LPoS [${DEVICE}][KSU].tar" "${DEVICE}-KSU"
         zip -r -9 "LPoS [${DEVICE}][KSU].zip" "${DEVICE}-KSU"
         mv "LPoS [${DEVICE}][KSU].zip" "KSU-LPoS [${DEVICE}]-${current_datetime}.zip"
         cd "$work_dir"
