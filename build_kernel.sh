@@ -27,7 +27,7 @@ LLVM=1
 '
 
 make distclean
-make ${ARGS} KCFLAGS=-w exynos9820-beyondxks_defconfig
+make ${ARGS} KCFLAGS=-w exynos9820-beyondxks_defconfig lpos.config
 make ${ARGS} KCFLAGS=-w -j$(nproc)
 
 echo "  Cleaning Stuff"
