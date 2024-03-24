@@ -5,6 +5,10 @@ export ARCH=arm64
 export PLATFORM_VERSION=12
 export ANDROID_MAJOR_VERSION=s
 
+if [ -z "$DEVICE" ]; then
+export DEVICE=S10_5G
+fi
+
 ARGS='
 CC=clang
 LD='${LLVM_DIR}/ld.lld'
@@ -27,15 +31,13 @@ LLVM=1
 '
 
 make distclean
-make ${ARGS} KCFLAGS=-w exynos9820-beyondxks_defconfig lpos.config
+make ${ARGS} KCFLAGS=-w ${DEVICE}_defconfig lpos.config
 make ${ARGS} KCFLAGS=-w -j$(nproc)
 
-echo "  Cleaning Stuff"
+echo "  CLEANING"
 rm -rf AIK/Image
 rm -rf config
-echo "  done"
-echo ""
-echo "  Copying Stuff"
+echo "  COPYING"
 
 # Define potential locations for the image binary
 locations=(
@@ -60,13 +62,11 @@ fi
 
 cp -r arch/arm64/boot/Image AIK/Image
 cp -r .config AIK/config
-echo "  done"
-echo ""
 kver=$(make kernelversion)
 kmod=$(echo ${kver} | awk -F'.' '{print $3}')
-echo "  Zipping Stuff"
+echo "  ZIPPING"
 cd AIK
 rm -rf lpos.*.zip
-zip -r1 lpos.${kmod}_s10.zip * -x .git README.md *placeholder
+zip -r1 lpos.${kmod}_${DEVICE}.zip * -x .git README.md *placeholder
 cd ..
-echo "  Ready to Flash"
+echo "  DONE"

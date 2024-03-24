@@ -321,6 +321,32 @@ config SOC_EXYNOS9820
 	select PINCTRL
 	select SAMSUNG_DMADEV
 
+if SOC_EXYNOS9820	
+
+choice
+        prompt "EXYNOS 9820 DTBO TARGET"
+
+config DTBO_beyondx
+       bool "S10 5G"
+
+config DTBO_beyond1lte
+       bool "S10"
+
+config DTBO_beyond2lte
+       bool "S10+"
+
+config DTBO_beyond0lte
+       bool "S10e"
+
+config DTBO_d1
+       bool "N10"
+
+config DTBO_d2
+       bool "N10+"
+endchoice
+
+endif
+
 config SOC_EXYNOS9820_EVT0
 	default n
 	bool "Samsung EXYNOS9820 EVT0"
