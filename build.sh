@@ -16,6 +16,7 @@ CLANG_TRIPLE=aarch64-linux-gnu-
 AR=llvm-ar
 NM=llvm-nm
 AS=llvm-as
+READELF=llvm-readelf
 OBJCOPY=llvm-objcopy
 OBJDUMP=llvm-objdump
 READELF=llvm-readelf
