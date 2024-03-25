@@ -1,4 +1,5 @@
 #!/bin/bash
+ln -s /usr/bin/python2.7 "$HOME/python"
 export CONFIG="exynos9820-beyondxks_defconfig"
 export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
 export LLVM=1
@@ -16,9 +17,9 @@ CLANG_TRIPLE=aarch64-linux-gnu-
 AR=llvm-ar
 NM=llvm-nm
 AS=llvm-as
+READELF=llvm-readelf
 OBJCOPY=llvm-objcopy
 OBJDUMP=llvm-objdump
-READELF=llvm-readelf
 OBJSIZE=llvm-size
 STRIP=llvm-strip
 LLVM_AR=llvm-ar
@@ -27,7 +28,7 @@ LLVM_NM=llvm-nm
 LLVM=1
 "
 
-make ${ARGS} clean && make ${ARGS} mrproper
+#make ${ARGS} clean && make ${ARGS} mrproper
 
 #patching allowlist for non-gki
 if [ ! -f ".allowlist_patched" ]; then
