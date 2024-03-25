@@ -41,11 +41,14 @@ DECLARE_KAIRISTICS(cpufreq, 32, 25, 24, 25);
 unsigned long boosted_cpu_util(int cpu, unsigned long other_util);
 
 #define SUGOV_KTHREAD_PRIORITY	50
+#define UP_RATE_LIMIT_US 10000
+#define DOWN_RATE_LIMIT_US 10000
 
 struct sugov_tunables {
 	struct gov_attr_set attr_set;
 	unsigned int up_rate_limit_us;
 	unsigned int down_rate_limit_us;
+	bool iowait_boost_enable;
 #ifdef CONFIG_SCHED_KAIR_GLUE
 	bool fb_legacy;
 #endif
@@ -109,6 +112,7 @@ struct sugov_cpu {
 };
 
 static DEFINE_PER_CPU(struct sugov_cpu, sugov_cpu);
+static DEFINE_PER_CPU(struct sugov_tunables *, cached_tunables);
 
 /******************* exynos specific function *******************/
 #define DEFAULT_EXPIRED_TIME	70
@@ -218,9 +222,6 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 	 */
 	if (sg_policy->policy->fast_switch_enabled &&
 	    !cpufreq_this_cpu_can_update(sg_policy->policy))
-		return false;
-
-	if (sg_policy->work_in_progress)
 		return false;
 
 	if (unlikely(sg_policy->need_freq_update)) {
@@ -474,6 +475,21 @@ static inline void sugov_util_collapse(struct sugov_cpu *sg_cpu)
 static void sugov_set_iowait_boost(struct sugov_cpu *sg_cpu, u64 time,
 				   unsigned int flags)
 {
+	struct sugov_policy *sg_policy = sg_cpu->sg_policy;
+
+	if (!sg_policy->tunables->iowait_boost_enable || is_battery_saver_on())
+		return;
+
+	if (sg_cpu->iowait_boost) {
+		s64 delta_ns = time - sg_cpu->last_update;
+
+		/* Clear iowait_boost if the CPU apprears to have been idle. */
+		if (delta_ns > TICK_NSEC) {
+			sg_cpu->iowait_boost = 0;
+			sg_cpu->iowait_boost_pending = false;
+		}
+    }
+
 	if (flags & SCHED_CPUFREQ_IOWAIT) {
 		if (sg_cpu->iowait_boost_pending)
 			return;
@@ -486,14 +502,6 @@ static void sugov_set_iowait_boost(struct sugov_cpu *sg_cpu, u64 time,
 				sg_cpu->iowait_boost = sg_cpu->iowait_boost_max;
 		} else {
 			sg_cpu->iowait_boost = sg_cpu->sg_policy->policy->min;
-		}
-	} else if (sg_cpu->iowait_boost) {
-		s64 delta_ns = time - sg_cpu->last_update;
-
-		/* Clear iowait_boost if the CPU apprears to have been idle. */
-		if (delta_ns > TICK_NSEC) {
-			sg_cpu->iowait_boost = 0;
-			sg_cpu->iowait_boost_pending = false;
 		}
 	}
 }
@@ -761,6 +769,29 @@ static ssize_t down_rate_limit_us_store(struct gov_attr_set *attr_set,
 	return count;
 }
 
+static ssize_t iowait_boost_enable_show(struct gov_attr_set *attr_set,
+					char *buf)
+{
+	struct sugov_tunables *tunables = to_sugov_tunables(attr_set);
+
+	return sprintf(buf, "%u\n", is_battery_saver_on() ?
+				0 : tunables->iowait_boost_enable);
+}
+
+static ssize_t iowait_boost_enable_store(struct gov_attr_set *attr_set,
+					 const char *buf, size_t count)
+{
+	struct sugov_tunables *tunables = to_sugov_tunables(attr_set);
+	bool enable;
+
+	if (kstrtobool(buf, &enable))
+		return -EINVAL;
+
+	tunables->iowait_boost_enable = enable;
+
+	return count;
+}
+
 #ifdef CONFIG_SCHED_KAIR_GLUE
 static ssize_t fb_legacy_show(struct gov_attr_set *attr_set, char *buf)
 {
@@ -783,6 +814,7 @@ static ssize_t fb_legacy_store(struct gov_attr_set *attr_set, const char *buf,
 
 static struct governor_attr up_rate_limit_us = __ATTR_RW(up_rate_limit_us);
 static struct governor_attr down_rate_limit_us = __ATTR_RW(down_rate_limit_us);
+static struct governor_attr iowait_boost_enable = __ATTR_RW(iowait_boost_enable);
 #ifdef CONFIG_SCHED_KAIR_GLUE
 static struct governor_attr fb_legacy = __ATTR_RW(fb_legacy);
 #endif
@@ -790,28 +822,21 @@ static struct governor_attr fb_legacy = __ATTR_RW(fb_legacy);
 static struct attribute *sugov_attributes[] = {
 	&up_rate_limit_us.attr,
 	&down_rate_limit_us.attr,
+	&iowait_boost_enable.attr,
 #ifdef CONFIG_SCHED_KAIR_GLUE
 	&fb_legacy.attr,
 #endif
 	NULL
 };
 
-static void sugov_tunables_free(struct kobject *kobj)
-{
-	struct gov_attr_set *attr_set = container_of(kobj, struct gov_attr_set, kobj);
-
-	kfree(to_sugov_tunables(attr_set));
-}
-
 static struct kobj_type sugov_tunables_ktype = {
 	.default_attrs = sugov_attributes,
 	.sysfs_ops = &governor_sysfs_ops,
-	.release = &sugov_tunables_free,
 };
 
 /********************** cpufreq governor interface *********************/
 
-static struct cpufreq_governor schedutil_gov;
+static struct cpufreq_governor nobody_sched_gov;
 
 static struct sugov_policy *sugov_policy_alloc(struct cpufreq_policy *policy)
 {
@@ -826,7 +851,7 @@ static struct sugov_policy *sugov_policy_alloc(struct cpufreq_policy *policy)
 	return sg_policy;
 }
 
-static inline void sugov_policy_free(struct sugov_policy *sg_policy)
+static void sugov_policy_free(struct sugov_policy *sg_policy)
 {
 	kfree(sg_policy);
 }
@@ -897,10 +922,49 @@ static struct sugov_tunables *sugov_tunables_alloc(struct sugov_policy *sg_polic
 	return tunables;
 }
 
-static void sugov_clear_global_tunables(void)
+static void sugov_tunables_save(struct cpufreq_policy *policy,
+		struct sugov_tunables *tunables)
+{
+	int cpu;
+	struct sugov_tunables *cached = per_cpu(cached_tunables, policy->cpu);
+ 	if (!have_governor_per_policy())
+		return;
+ 	if (!cached) {
+		cached = kzalloc(sizeof(*tunables), GFP_KERNEL);
+		if (!cached) {
+			pr_warn("Couldn't allocate tunables for caching\n");
+			return;
+		}
+		for_each_cpu(cpu, policy->related_cpus)
+			per_cpu(cached_tunables, cpu) = cached;
+	}
+ 	cached->up_rate_limit_us = tunables->up_rate_limit_us;
+	cached->down_rate_limit_us = tunables->down_rate_limit_us;
+}
+
+static void sugov_tunables_free(struct sugov_tunables *tunables)
 {
 	if (!have_governor_per_policy())
 		global_tunables = NULL;
+
+	kfree(tunables);
+}
+
+static void sugov_tunables_restore(struct cpufreq_policy *policy)
+{
+	struct sugov_policy *sg_policy = policy->governor_data;
+	struct sugov_tunables *tunables = sg_policy->tunables;
+	struct sugov_tunables *cached = per_cpu(cached_tunables, policy->cpu);
+ 	if (!cached)
+		return;
+ 	tunables->up_rate_limit_us = cached->up_rate_limit_us;
+	tunables->down_rate_limit_us = cached->down_rate_limit_us;
+	sg_policy->up_rate_delay_ns =
+		tunables->up_rate_limit_us * NSEC_PER_USEC;
+	sg_policy->down_rate_delay_ns =
+		tunables->down_rate_limit_us * NSEC_PER_USEC;
+	sg_policy->min_rate_limit_ns = min(sg_policy->up_rate_delay_ns,
+					   sg_policy->down_rate_delay_ns);
 }
 
 static int sugov_init(struct cpufreq_policy *policy)
@@ -951,8 +1015,9 @@ tunables_init:
 		goto stop_kthread;
 	}
 
-	tunables->up_rate_limit_us = cpufreq_policy_transition_delay_us(policy);
-	tunables->down_rate_limit_us = cpufreq_policy_transition_delay_us(policy);
+	tunables->up_rate_limit_us = UP_RATE_LIMIT_US;
+	tunables->down_rate_limit_us = DOWN_RATE_LIMIT_US;
+	tunables->iowait_boost_enable = policy->iowait_boost_enable;
 #ifdef CONFIG_SCHED_KAIR_GLUE
 	tunables->fb_legacy = true;
 	sg_policy->be_stochastic = false;
@@ -961,9 +1026,11 @@ tunables_init:
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;
 
+	sugov_tunables_restore(policy);
+
 	ret = kobject_init_and_add(&tunables->attr_set.kobj, &sugov_tunables_ktype,
 				   get_governor_parent_kobj(policy), "%s",
-				   schedutil_gov.name);
+				   nobody_sched_gov.name);
 	if (ret)
 		goto fail;
 
@@ -973,7 +1040,7 @@ out:
 
 fail:
 	policy->governor_data = NULL;
-	sugov_clear_global_tunables();
+	sugov_tunables_free(tunables);
 
 stop_kthread:
 	sugov_kthread_stop(sg_policy);
@@ -1002,8 +1069,10 @@ static void sugov_exit(struct cpufreq_policy *policy)
 
 	count = gov_attr_set_put(&tunables->attr_set, &sg_policy->tunables_hook);
 	policy->governor_data = NULL;
-	if (!count)
-		sugov_clear_global_tunables();
+	if (!count) {
+		sugov_tunables_save(policy, tunables);
+		sugov_tunables_free(tunables);
+    }
 
 #ifdef CONFIG_SCHED_KAIR_GLUE
 	if (sg_cpu->util_vessel) {
@@ -1148,8 +1217,8 @@ static void sugov_limits(struct cpufreq_policy *policy)
 	mutex_unlock(&global_tunables_lock);
 }
 
-static struct cpufreq_governor schedutil_gov = {
-	.name = "schedutil",
+static struct cpufreq_governor nobody_sched_gov = {
+	.name = "nobody_sched",
 	.owner = THIS_MODULE,
 	.dynamic_switching = true,
 	.init = sugov_init,
@@ -1159,10 +1228,10 @@ static struct cpufreq_governor schedutil_gov = {
 	.limits = sugov_limits,
 };
 
-#ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
+#ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_NOBODY_SCHED
 struct cpufreq_governor *cpufreq_default_governor(void)
 {
-	return &schedutil_gov;
+	return &nobody_sched_gov;
 }
 #endif
 static void sugov_update_min(struct cpufreq_policy *policy)
@@ -1398,6 +1467,6 @@ static int __init sugov_register(void)
 {
 	sugov_exynos_init();
 
-	return cpufreq_register_governor(&schedutil_gov);
+	return cpufreq_register_governor(&nobody_sched_gov);
 }
 fs_initcall(sugov_register);
