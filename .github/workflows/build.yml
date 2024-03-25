@@ -1,0 +1,36 @@
+name: Build Kernel
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        device: [S10-5G, S10, S10+, S10e]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install packages & setup
+        run: |
+          sudo apt update -y
+          sudo apt install libssl-dev libncurses5-dev python2 libtinfo5 -y
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang -b master toolchain
+
+      - name: Building LPOS ${{ matrix.device }}
+        run: |
+          DEVICE=${{ matrix.device }} ./build.sh
+
+      - name: Upload kernel
+        uses: actions/upload-artifact@v4
+        with:
+          name: "LPOS_${{ matrix.device }}"
+          path: |
+            AIK/lpos*.zip

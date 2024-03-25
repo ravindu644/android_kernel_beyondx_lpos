@@ -1,13 +1,17 @@
 #!/bin/bash
 ln -s /usr/bin/python2.7 "$HOME/python"
-export CONFIG="exynos9820-beyondxks_defconfig"
 export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
 export LLVM=1
 export ARCH=arm64
 export PLATFORM_VERSION=12
 export ANDROID_MAJOR_VERSION=s
 
-ARGS="
+if [ -z "$DEVICE" ]; then
+    export DEVICE="S10-5G"
+fi
+
+export CONFIG="${DEVICE}_defconfig"
+export ARGS="
 CC=clang
 LD=ld.lld
 ARCH=arm64
@@ -28,7 +32,7 @@ LLVM_NM=llvm-nm
 LLVM=1
 "
 
-#make ${ARGS} clean && make ${ARGS} mrproper
+make ${ARGS} clean && make ${ARGS} mrproper
 
 #patching allowlist for non-gki
 if [ ! -f ".allowlist_patched" ]; then
@@ -36,7 +40,17 @@ if [ ! -f ".allowlist_patched" ]; then
     echo "1" > ".allowlist_patched"
 fi
 
+
+lpos(){
 patch -p1 < "$work_dir/ksu.patch" || true
-make ${ARGS} ${CONFIG}
+make ${ARGS} ${CONFIG} lpos.config
 make ${ARGS} menuconfig
 make ${ARGS} -j$(nproc)
+}
+
+ksu(){
+patch -p1 < "$work_dir/ksu.patch" || true
+make ${ARGS} ${CONFIG} lpos_ksu.config
+make ${ARGS} menuconfig
+make ${ARGS} -j$(nproc)
+}
