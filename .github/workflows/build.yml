@@ -49,27 +49,29 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     needs: build
-    strategy:
-      matrix:
-        device: [S10-5G, S10, S10+, S10e]
     steps:
 
       - uses: actions/download-artifact@v4
       - name: Display structure of downloaded files
         run: |
           ls -R
+          mkdir -p out      
+          for folder in "LPOS_S10" "LPOS_S10+" "LPOS_S10-5G" "LPOS_S10e"; do
+              cd $folder
+              cp *.zip ../out
+              cd ..
+          done
 
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.event.inputs.tag }}-${{ matrix.device }}
+          tag: ${{ github.event.inputs.tag }}
           name: "LPoS Kernel-${{ github.event.inputs.tag }}"
           draft: false
           prerelease: false
           token: ${{ secrets.TOKEN }}          
           artifacts: |
-            LPOS_${{ matrix.device }}/LPoS*.zip
-            LPOS_${{ matrix.device }}/KSU*.zip    
+            out/*.zip
           body: "Commit SHA: ${{ github.sha }}"
 
       - name: Upload to Telegram
@@ -78,14 +80,13 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           document: |
-            LPOS_${{ matrix.device }}/LPoS*.zip
-            LPOS_${{ matrix.device }}/KSU*.zip 
+            out/*.zip
           format: html
           disable_web_page_preview: false
           message: |
             <b>New Kernel Build found..! 🎉</b>
             
-            <b>Device :</b> ${{ matrix.device }} 
+            <b>Device :</b> Universal S10
             <b>Kernel Version :</b> ${{ github.event.inputs.tag }}                    
             <b>Repository:</b> <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a>
             
