@@ -287,6 +287,26 @@ config SOC_EXYNOS9810
 	select PINCTRL
 	select SAMSUNG_DMADEV
 
+if SOC_EXYNOS9820	
+
+choice
+        prompt "EXYNOS 9820 DTBO TARGET"
+
+config DTBO_beyondx
+       bool "S10 5G"
+
+config DTBO_beyond1lte
+       bool "S10"
+
+config DTBO_beyond2lte
+       bool "S10+"
+
+config DTBO_beyond0lte
+       bool "S10e"
+endchoice
+
+endif	
+
 config SOC_EMULATOR9820
 	bool "Samsung EMULATOR9820"
 	select SOC_SAMSUNG
