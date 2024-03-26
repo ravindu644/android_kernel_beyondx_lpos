@@ -1,6 +1,7 @@
 #!/bin/bash
-export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
 export WDIR="$(pwd)"
+export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
+export PATH=$WDIR/toolchain:$PATH
 export LLVM=1
 export ARCH=arm64
 export PLATFORM_VERSION=12
