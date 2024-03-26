@@ -57,7 +57,7 @@ jobs:
       - uses: actions/download-artifact@v4
       - name: Display structure of downloaded files
         run: |
-          ls
+          ls -R
 
       - name: Create release
         uses: ncipollo/release-action@v1
@@ -68,8 +68,8 @@ jobs:
           prerelease: false
           token: ${{ secrets.TOKEN }}          
           artifacts: |
-            ${{ matrix.device }}/LPoS*.zip
-            ${{ matrix.device }}/KSU*.zip    
+            LPOS_${{ matrix.device }}/LPoS*.zip
+            LPOS_${{ matrix.device }}/KSU*.zip    
           body: "Commit SHA: ${{ github.sha }}"
 
       - name: Upload to Telegram
@@ -78,8 +78,8 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           document: |
-            ${{ matrix.device }}/LPoS*.zip
-            ${{ matrix.device }}/KSU*.zip     
+            LPOS_${{ matrix.device }}/LPoS*.zip
+            LPOS_${{ matrix.device }}/KSU*.zip 
           format: html
           disable_web_page_preview: false
           message: |
