@@ -51,15 +51,6 @@ jobs:
     needs: build
     steps:
 
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: out
-          merge-multiple: true
-
-      - name: Display structure of downloaded files
-        run: ls -R out    
-
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
