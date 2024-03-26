@@ -1,6 +1,6 @@
 #!/bin/bash
-ln -s /usr/bin/python2.7 "$HOME/python"
 export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
+export WDIR="$(pwd)"
 export LLVM=1
 export ARCH=arm64
 export PLATFORM_VERSION=12
@@ -10,7 +10,16 @@ if [ -z "$DEVICE" ]; then
     export DEVICE="S10-5G"
 fi
 
+if [ ! -f "$HOME/python" ]; then
+    ln -s /usr/bin/python2.7 "$HOME/python"
+fi
+
 export CONFIG="${DEVICE}_defconfig"
+export AIK="${WDIR}/binaries/${DEVICE}/AIK"
+export VBMETA="${WDIR}/binaries/addons/vbmeta.img"
+export current_datetime=$(date +"%Y-%m-%d_%H-%M-%S")
+export KBUILD_BUILD_USER="@ravindu644"
+export MKDTIMG="${WDIR}/binaries/mkdtimg"
 export ARGS="
 CC=clang
 LD=ld.lld
@@ -32,25 +41,70 @@ LLVM_NM=llvm-nm
 LLVM=1
 "
 
-make ${ARGS} clean && make ${ARGS} mrproper
+mkdir out || true 
 
 #patching allowlist for non-gki
-if [ ! -f ".allowlist_patched" ]; then
-    patch -p1 < "$work_dir/ksu.patch"
-    echo "1" > ".allowlist_patched"
-fi
+patch(){
+    if [ ! -f ".allowlist_patched" ]; then
+        patch -p1 < "ksu.patch"
+        echo "1" > ".allowlist_patched"
+    fi
+}
+
+dtb() {
+    $MKDTIMG cfg_create "${WDIR}/out/dt.img" "${WDIR}/binaries/exynos9820.cfg" -d "${WDIR}/arch/arm64/boot/dts/exynos"
+}
+
+packing() {
+    echo -e "\n\n[+] Repacking boot.img..."
+    cd "${AIK}/ramdisk"
+    if [ ! -d "debug_ramdisk" ]; then
+        mkdir -p debug_ramdisk dev metadata mnt proc second_stage_resources sys
+    fi
+    cd "${WDIR}"
+    sudo bash "${AIK}/repackimg.sh"
+    echo -e "\n\n[+] Repacking Done..!"
+    mv "${AIK}/image-new.img" "${WDIR}/out/boot.img"
+
+    echo -e "\n\n[i] Creating a Flashable tar..!"
+
+    cd "${WDIR}/out"
+    cp "${VBMETA}" .
+    sudo chmod +777 *
+    tar -cvf "${FILE_NAME}.tar" boot.img dt.img vbmeta.img ; rm boot.img dt.img vbmeta.img
+    zip -9 "${FILE_NAME}.tar.zip" "${FILE_NAME}.tar"
+    cd "${WDIR}"
+    echo -e "\n\n[i] Compilation Done..🌛"    
+}
 
 
 lpos(){
-patch -p1 < "$work_dir/ksu.patch" || true
-make ${ARGS} ${CONFIG} lpos.config
-make ${ARGS} menuconfig
-make ${ARGS} -j$(nproc)
+    export FILE_NAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}"    
+    make ${ARGS} distclean
+    patch
+    make ${ARGS} ${CONFIG} lpos.config
+    make ${ARGS} menuconfig
+    make ${ARGS} -j$(nproc) || exit 1
+    dtb
+    mv "${WDIR}/arch/arm64/boot/Image" "${AIK}/split_img/boot.img-kernel"
+    packing
 }
 
 ksu(){
-patch -p1 < "$work_dir/ksu.patch" || true
-make ${ARGS} ${CONFIG} lpos_ksu.config
-make ${ARGS} menuconfig
-make ${ARGS} -j$(nproc)
+    export FILE_NAME="LPoS-${DEVICE}-KSU-${LPOS_KERNEL_VERSION}"    
+    make ${ARGS} distclean
+    patch
+    make ${ARGS} ${CONFIG} lpos_ksu.config
+    make ${ARGS} menuconfig
+    make ${ARGS} -j$(nproc) || exit 1
+    dtb
+    mv "${WDIR}/arch/arm64/boot/Image" "${AIK}/split_img/boot.img-kernel"
+    packing  
 }
+
+case "$1" in
+    "-k")
+        ksu ;;
+    *)
+        lpos ;;
+esac
