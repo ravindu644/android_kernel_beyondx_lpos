@@ -26,7 +26,7 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install libssl-dev libncurses5-dev python2 libtinfo5 -y
-          git clone --depth=1 https://github.com/kdrag0n/proton-clang -b master toolchain
+          git clone --depth=1 https://github.com/ghazzor/proton-12 toolchain
           echo "LPOS_KERNEL_VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
           export PATH=$HOME/:$PWD/toolchain/bin:$PATH
 
@@ -49,19 +49,27 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        device: [S10-5G, S10, S10+, S10e]
     steps:
+
+      - uses: actions/download-artifact@v4
+      - name: Display structure of downloaded files
+        run: |
+          ls
 
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.event.inputs.tag }}
-          name: "LPoS Kernel ${{ github.event.inputs.tag }}"
+          tag: ${{ github.event.inputs.tag }}-${{ matrix.device }}
+          name: "LPoS Kernel-${{ github.event.inputs.tag }}"
           draft: false
           prerelease: false
           token: ${{ secrets.TOKEN }}          
           artifacts: |
-            out/LPoS*.zip
-            out/KSU*.zip    
+            ${{ matrix.device }}/LPoS*.zip
+            ${{ matrix.device }}/KSU*.zip    
           body: "Commit SHA: ${{ github.sha }}"
 
       - name: Upload to Telegram
@@ -70,14 +78,14 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           document: |
-            out/LPoS*.zip
-            out/KSU*.zip       
+            ${{ matrix.device }}/LPoS*.zip
+            ${{ matrix.device }}/KSU*.zip     
           format: html
           disable_web_page_preview: false
           message: |
             <b>New Kernel Build found..! 🎉</b>
             
-            <b>Devices :</b> Universal S10   
+            <b>Device :</b> ${{ matrix.device }} 
             <b>Kernel Version :</b> ${{ github.event.inputs.tag }}                    
             <b>Repository:</b> <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a>
             
