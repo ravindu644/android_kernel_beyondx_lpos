@@ -36,19 +36,20 @@ jobs:
 
       - name: Building LPoS + KernelSU
         run: |
-          DEVICE=${{ matrix.device }} ./build.sh -k  
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: "LPOS_${{ matrix.device }}"
-          path: |
-            out/${{ matrix.device }}/*.zip 
+          DEVICE=${{ matrix.device }} ./build.sh -k   
 
   upload:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "LPOS_${{ matrix.device }}"
+          path: |
+            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-KSU-${{ github.event.inputs.tag }}.tar.zip
+            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-${{ github.event.inputs.tag }}.tar.zip
+                  
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
@@ -57,7 +58,9 @@ jobs:
           draft: false
           prerelease: false
           token: ${{ secrets.TOKEN }}          
-          artifacts: out/${{ matrix.device }}/*.zip
+          artifacts: |
+            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-KSU-${{ github.event.inputs.tag }}.tar.zip
+            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-${{ github.event.inputs.tag }}.tar.zip        
           body: "Commit SHA: ${{ github.sha }}"
 
       - name: Upload to Telegram
@@ -65,7 +68,9 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          document: out/${{ matrix.device }}/*.zip
+          document: |
+            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-KSU-${{ github.event.inputs.tag }}.tar.zip
+            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-${{ github.event.inputs.tag }}.tar.zip          
           format: html
           disable_web_page_preview: false
           message: |

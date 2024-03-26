@@ -11,6 +11,9 @@ if [ -z "$DEVICE" ]; then
     export DEVICE="S10-5G"
 fi
 
+if [ -z "$DEVICE" ]; then
+    export LPOS_KERNEL_VERSION="dev"
+fi
 
 if [ ! -f "$HOME/python" ]; then
     ln -s /usr/bin/python2.7 "$HOME/python"
@@ -76,7 +79,10 @@ packing() {
     sudo chmod +777 *
     tar -cvf "${FILE_NAME}.tar" boot.img dt.img vbmeta.img ; rm boot.img dt.img vbmeta.img
     zip -9 "${FILE_NAME}.tar.zip" "${FILE_NAME}.tar"
-    mkdir "${DEVICE}" && mv "${FILE_NAME}.tar.zip" "${DEVICE}"
+    if [ ! -d "${DEVICE}" ]; then
+        mkdir "${DEVICE}"
+    fi
+    mv "${FILE_NAME}.tar.zip" "${DEVICE}"
     cd "${WDIR}"
     echo -e "\n\n[i] Compilation Done for ${DEVICE}..🌛"    
 }
