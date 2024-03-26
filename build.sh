@@ -95,9 +95,7 @@ lpos(){
 }
 
 ksu(){
-    export FILE_NAME="LPoS-${DEVICE}-KSU-${LPOS_KERNEL_VERSION}"    
-    make ${ARGS} distclean
-    patch_ksu
+    export FILE_NAME="LPoS-${DEVICE}-KSU-${LPOS_KERNEL_VERSION}"
     make ${ARGS} ${CONFIG} lpos_ksu.config
     make ${ARGS} menuconfig
     make ${ARGS} -j$(nproc) || exit 1
