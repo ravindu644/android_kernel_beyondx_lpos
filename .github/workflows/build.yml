@@ -3,6 +3,10 @@ name: Build Kernel
 on:
   push:
   workflow_dispatch:
+    inputs:      
+      tag:
+        description: 'Release Tag'
+        required: true    
 
 jobs:
   build:
@@ -23,6 +27,7 @@ jobs:
           sudo apt update -y
           sudo apt install libssl-dev libncurses5-dev python2 libtinfo5 -y
           git clone --depth=1 https://github.com/kdrag0n/proton-clang -b master toolchain
+          echo "LPOS_KERNEL_VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
 
       - name: Building LPOS ${{ matrix.device }}
         run: |
@@ -33,4 +38,44 @@ jobs:
         with:
           name: "LPOS_${{ matrix.device }}"
           path: |
-            AIK/lpos*.zip
+            out/*.zip 
+
+  upload:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: "LPOS_${{ matrix.device }}"
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.event.inputs.tag }}
+          name: "LPoS Kernel ${{ github.event.inputs.tag }}"
+          draft: false
+          prerelease: false
+          token: ${{ secrets.TOKEN }}          
+          artifacts: |
+            out/*.zip
+          body: "Commit SHA: ${{ github.sha }}"
+
+      - name: Upload to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          document: "out/*.zip"
+          format: html
+          disable_web_page_preview: false
+          message: |
+            <b>New Kernel Build found..! 🎉</b>
+            
+            <b>Devices :</b> Universal S10   
+            <b>Kernel Version :</b> ${{ github.event.inputs.tag }}                    
+            <b>Repository:</b> <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a>
+            
+            <b>Commit SHA:</b> <a href="https://github.com/${{ github.repository }}/commit/${{github.sha}}">Click here</a>
+            
+            <b>Installation :</b> <a href="https://telegra.ph/LPoS-Kernel-Installation-Guide-02-09">Click here</a>
