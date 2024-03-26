@@ -47,9 +47,9 @@ jobs:
         with:
           name: "LPOS_${{ matrix.device }}"
           path: |
-            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-KSU-${{ github.event.inputs.tag }}.tar.zip
-            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-${{ github.event.inputs.tag }}.tar.zip
-                  
+            out/LPoS*.zip
+            out/KSU*.zip
+
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
@@ -59,8 +59,8 @@ jobs:
           prerelease: false
           token: ${{ secrets.TOKEN }}          
           artifacts: |
-            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-KSU-${{ github.event.inputs.tag }}.tar.zip
-            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-${{ github.event.inputs.tag }}.tar.zip        
+            out/LPoS*.zip
+            out/KSU*.zip    
           body: "Commit SHA: ${{ github.sha }}"
 
       - name: Upload to Telegram
@@ -69,8 +69,8 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           document: |
-            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-KSU-${{ github.event.inputs.tag }}.tar.zip
-            out/${{ matrix.device }}/LPoS-${{ matrix.device }}-${{ github.event.inputs.tag }}.tar.zip          
+            out/LPoS*.zip
+            out/KSU*.zip       
           format: html
           disable_web_page_preview: false
           message: |
