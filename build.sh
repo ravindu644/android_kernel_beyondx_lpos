@@ -10,6 +10,7 @@ if [ -z "$DEVICE" ]; then
     export DEVICE="S10-5G"
 fi
 
+
 if [ ! -f "$HOME/python" ]; then
     ln -s /usr/bin/python2.7 "$HOME/python"
 fi
@@ -20,6 +21,7 @@ export VBMETA="${WDIR}/binaries/addons/vbmeta.img"
 export current_datetime=$(date +"%Y-%m-%d_%H-%M-%S")
 export KBUILD_BUILD_USER="@ravindu644"
 export MKDTIMG="${WDIR}/binaries/mkdtimg"
+
 export ARGS="
 CC=clang
 LD=ld.lld
@@ -44,10 +46,10 @@ LLVM=1
 mkdir out || true 
 
 #patching allowlist for non-gki
-patch(){
-    if [ ! -f ".allowlist_patched" ]; then
-        patch -p1 < "ksu.patch"
-        echo "1" > ".allowlist_patched"
+patch_ksu(){
+    if [ ! -f "${WDIR}/.allowlist_patched" ]; then
+        patch -p1 < "${WDIR}/ksu.patch"
+        echo "1" > "${WDIR}/.allowlist_patched"
     fi
 }
 
@@ -81,7 +83,7 @@ packing() {
 lpos(){
     export FILE_NAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}"    
     make ${ARGS} distclean
-    patch
+    patch_ksu
     make ${ARGS} ${CONFIG} lpos.config
     make ${ARGS} menuconfig
     make ${ARGS} -j$(nproc) || exit 1
@@ -93,7 +95,7 @@ lpos(){
 ksu(){
     export FILE_NAME="LPoS-${DEVICE}-KSU-${LPOS_KERNEL_VERSION}"    
     make ${ARGS} distclean
-    patch
+    patch_ksu
     make ${ARGS} ${CONFIG} lpos_ksu.config
     make ${ARGS} menuconfig
     make ${ARGS} -j$(nproc) || exit 1
