@@ -79,10 +79,7 @@ packing() {
     sudo chmod +777 *
     tar -cvf "${FILE_NAME}.tar" boot.img dt.img vbmeta.img ; rm boot.img dt.img vbmeta.img
     zip -9 "${FILE_NAME}.tar.zip" "${FILE_NAME}.tar"
-    if [ ! -d "${DEVICE}" ]; then
-        mkdir "${DEVICE}"
-    fi
-    mv "${FILE_NAME}.tar.zip" "${DEVICE}"
+    rm *.tar
     cd "${WDIR}"
     echo -e "\n\n[i] Compilation Done for ${DEVICE}..🌛"    
 }
