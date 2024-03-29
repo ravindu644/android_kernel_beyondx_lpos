@@ -4,8 +4,8 @@
 ln -s /usr/bin/python2.7 "$HOME/python"
 
 #exporting clang path
-export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
-export PATH=$WDIR/toolchain/bin:$PATH
+#export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
+export PATH=toolchain/bin:$PATH
 
 #saving current pwd as a variable
 export work_dir="$(pwd)"
