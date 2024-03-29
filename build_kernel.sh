@@ -4,7 +4,8 @@
 ln -s /usr/bin/python2.7 "$HOME/python"
 
 #exporting clang path
-export PATH="$HOME/":"$HOME/toolchain/proton-clang-12/bin":$PATH
+export PATH=$HOME/toolchain/proton-clang-12/bin:$PATH
+export PATH=$WDIR/toolchain/bin:$PATH
 
 #saving current pwd as a variable
 export work_dir="$(pwd)"
@@ -25,23 +26,30 @@ export current_datetime=$(date +"%Y-%m-%d_%H-%M-%S")
 #export LPOS_KERNEL_VERSION="v8.5.7"
 export DEVICE="S10 5G"
 export KBUILD_BUILD_USER="@ravindu644"
+export LLVM=1
+export ARCH=arm64
+export PLATFORM_VERSION=12
+export ANDROID_MAJOR_VERSION=s
+
 export ARGS="
-ARCH=arm64
-PLATFORM_VERSION=12
-ANDROID_MAJOR_VERSION=s
 CC=clang
-CROSS_COMPILE=aarch64-linux-gnu-
-ARCH=arm64
 LD=ld.lld
+ARCH=arm64
+CROSS_COMPILE=aarch64-linux-gnu-
+CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+CLANG_TRIPLE=aarch64-linux-gnu-
 AR=llvm-ar
 NM=llvm-nm
+AS=llvm-as
+READELF=llvm-readelf
 OBJCOPY=llvm-objcopy
 OBJDUMP=llvm-objdump
-READELF=llvm-readelf
 OBJSIZE=llvm-size
 STRIP=llvm-strip
 LLVM_AR=llvm-ar
 LLVM_DIS=llvm-dis
+LLVM_NM=llvm-nm
+LLVM=1
 "
 
 #your defconfig
