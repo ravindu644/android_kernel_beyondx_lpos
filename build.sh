@@ -69,7 +69,7 @@ lpos(){
     enforcing(){
         export SELINUX_STATUS="enforcing"
         export FILENAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-${SELINUX_STATUS}"
-        make ${ARGS} clean && make ${ARGS} mrproper
+        #make ${ARGS} clean && make ${ARGS} mrproper
         allowlist
         make ${ARGS} "${DEFCONFIG}"
         make ${ARGS} menuconfig
