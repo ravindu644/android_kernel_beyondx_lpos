@@ -147,7 +147,7 @@ repack() {
 
     cd "${WDIR}/out"
     cp "${VBMETA}" "${INSTALLER}"
-    cd "${INSTALLER}" ; sudo chmod +755 -R -f *
+    cd "${INSTALLER}" ; sudo chmod +755 -R -f * ; rm -rf *.zip
     zip -r -9 "${FILENAME}.zip" * ; rm -rf *.img
     mv "${FILENAME}.zip" "${WDIR}/out" ; cd "${WDIR}"
     echo -e "\n\n[i] Compilation Done..🌛"
