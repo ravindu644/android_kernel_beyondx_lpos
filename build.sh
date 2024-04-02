@@ -46,6 +46,9 @@ if [ ! -d "${WDIR}/out" ]; then
     mkdir -p "${WDIR}/out"
 fi
 
+#setting up localversion
+echo "CONFIG_LOCALVERSION="-LPoS-${LPOS_KERNEL_VERSION}"" > "${WDIR}/arch/arm64/configs/version.config"
+
 #dev
 if [ -z "$LPOS_KERNEL_VERSION" ]; then
     export LPOS_KERNEL_VERSION="dev"
@@ -71,7 +74,7 @@ lpos(){
         export FILENAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"
         make ${ARGS} clean && make ${ARGS} mrproper
         allowlist
-        make ${ARGS} "${DEFCONFIG}"
+        make ${ARGS} "${DEFCONFIG}" version.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
         dtb ; repack
@@ -80,7 +83,7 @@ lpos(){
     permissive(){
         export SELINUX_STATUS="permissive"
         export FILENAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"     
-        make ${ARGS} "${DEFCONFIG}" permissive.config
+        make ${ARGS} "${DEFCONFIG}" version.config permissive.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
         dtb ; repack   
@@ -94,7 +97,7 @@ ksu(){
     ksu_enforcing(){
         export SELINUX_STATUS="enforcing"
         export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"        
-        make ${ARGS} "${DEFCONFIG}" ksu.config
+        make ${ARGS} "${DEFCONFIG}" version.config ksu.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
         dtb ; repack
@@ -103,7 +106,7 @@ ksu(){
     ksu_permissive(){
         export SELINUX_STATUS="permissive"
         export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"           
-        make ${ARGS} "${DEFCONFIG}" permissive.config ksu.config
+        make ${ARGS} "${DEFCONFIG}" version.config permissive.config ksu.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
         dtb ; repack        
