@@ -46,13 +46,13 @@ if [ ! -d "${WDIR}/out" ]; then
     mkdir -p "${WDIR}/out"
 fi
 
-#setting up localversion
-echo -e "\nCONFIG_LOCALVERSION="-LPoS-${LPOS_KERNEL_VERSION}\n"" >> "${WDIR}/arch/arm64/configs/version.config"
-
 #dev
 if [ -z "$LPOS_KERNEL_VERSION" ]; then
     export LPOS_KERNEL_VERSION="dev"
 fi
+
+#setting up localversion
+echo -e "CONFIG_LOCALVERSION_AUTO=n\nCONFIG_LOCALVERSION=\"-LPoS-${LPOS_KERNEL_VERSION}\"\n" > "${WDIR}/arch/arm64/configs/version.config"
 
 #ksu allowlist patch
 allowlist(){
