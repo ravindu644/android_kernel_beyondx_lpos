@@ -104,7 +104,7 @@ ksu(){
     ksu_permissive(){
         export SELINUX_STATUS="permissive"
         export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-${SELINUX_STATUS}"         
-        make ${ARGS} "${DEFCONFIG}" permissive.cong ksu.config
+        make ${ARGS} "${DEFCONFIG}" permissive.config ksu.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
         dtb ; repack        
