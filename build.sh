@@ -91,7 +91,6 @@ lpos(){
 
 #building non-ksu kernel
 ksu(){
-    export DEVICE="${DEVICE}-KSU"
     ksu_enforcing(){
         export SELINUX_STATUS="enforcing"
         export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"        
