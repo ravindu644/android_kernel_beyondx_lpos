@@ -47,7 +47,7 @@ if [ ! -d "${WDIR}/out" ]; then
 fi
 
 #setting up localversion
-echo "CONFIG_LOCALVERSION="-LPoS-${LPOS_KERNEL_VERSION}"" >> "${WDIR}/arch/arm64/configs/version.config"
+echo -e "\nCONFIG_LOCALVERSION="-LPoS-${LPOS_KERNEL_VERSION}\n"" >> "${WDIR}/arch/arm64/configs/version.config"
 
 #dev
 if [ -z "$LPOS_KERNEL_VERSION" ]; then
