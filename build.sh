@@ -94,6 +94,8 @@ lpos(){
 
 #building non-ksu kernel
 ksu(){
+    #setting up localversion + ksu
+    echo -e "CONFIG_LOCALVERSION_AUTO=n\nCONFIG_LOCALVERSION=\"-LPoS-${LPOS_KERNEL_VERSION}-KSU\"\n" > "${WDIR}/arch/arm64/configs/version.config"    
     ksu_enforcing(){
         export SELINUX_STATUS="enforcing"
         export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"        
