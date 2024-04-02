@@ -68,7 +68,7 @@ dtb() {
 lpos(){
     enforcing(){
         export SELINUX_STATUS="enforcing"
-        export FILENAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-${SELINUX_STATUS}"
+        export FILENAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"
         #make ${ARGS} clean && make ${ARGS} mrproper
         allowlist
         make ${ARGS} "${DEFCONFIG}"
@@ -79,7 +79,7 @@ lpos(){
 
     permissive(){
         export SELINUX_STATUS="permissive"
-        export FILENAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-${SELINUX_STATUS}"        
+        export FILENAME="LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"     
         make ${ARGS} "${DEFCONFIG}" permissive.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
@@ -94,7 +94,7 @@ ksu(){
     export DEVICE="${DEVICE}-KSU"
     ksu_enforcing(){
         export SELINUX_STATUS="enforcing"
-        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-${SELINUX_STATUS}"        
+        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"        
         make ${ARGS} "${DEFCONFIG}" ksu.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
@@ -103,7 +103,7 @@ ksu(){
 
     ksu_permissive(){
         export SELINUX_STATUS="permissive"
-        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-${SELINUX_STATUS}"         
+        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"           
         make ${ARGS} "${DEFCONFIG}" permissive.config ksu.config
         make ${ARGS} menuconfig
         make ${ARGS} -j$(nproc) || exit 1
