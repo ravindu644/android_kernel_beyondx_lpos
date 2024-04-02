@@ -32,12 +32,12 @@ jobs:
       - name: Building LPoS
         run: |
           export PATH=$HOME/:$PWD/toolchain/bin:$PATH
-          bash build_kernel.sh -c
+          bash build.sh -c
 
       - name: Building LPoS + KernelSU
         run: |
           export PATH=$HOME/:$PWD/toolchain/bin:$PATH
-          bash build_kernel.sh -k          
+          bash build.sh -k          
 
       - name: Upload kernel
         uses: actions/upload-artifact@v4
