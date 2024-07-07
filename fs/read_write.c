@@ -25,10 +25,6 @@
 #include <linux/uaccess.h>
 #include <asm/unistd.h>
 
-#ifdef CONFIG_KSU
-#include <ksu_hook.h>
-#endif
-
 #ifdef CONFIG_SECURITY_DEFEX
 #include <linux/defex.h>
 #endif
@@ -444,10 +440,6 @@ EXPORT_SYMBOL(kernel_read);
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
-
-#ifdef CONFIG_KSU
-	ksu_handle_vfs_read(&file, &buf, &count, &pos);
-#endif	
 
 	if (!(file->f_mode & FMODE_READ))
 		return -EBADF;
