@@ -54,20 +54,12 @@ fi
 #setting up localversion
 echo -e "CONFIG_LOCALVERSION_AUTO=n\nCONFIG_LOCALVERSION=\"-LPoS-${LPOS_KERNEL_VERSION}\"\n" > "${WDIR}/arch/arm64/configs/version.config"
 
-#ksu allowlist patch
-allowlist(){
-    if [ ! -f ".allowlist_patched" ]; then
-        patch -p1 < "${WDIR}/ksu.patch"
-        echo "1" > "${WDIR}/.allowlist_patched"
-    fi
-}
-
 #dt
 dtb() {
     ${WDIR}/binaries/mkdtimg cfg_create "${INSTALLER}/dt.img" "${WDIR}/binaries/${SOC}.cfg" -d "${WDIR}/arch/arm64/boot/dts/exynos"
 }
 
-#building non-ksu kernel
+#building kernel
 lpos(){
     enforcing(){
         export SELINUX_STATUS="enforcing"
@@ -92,47 +84,10 @@ lpos(){
     permissive
 }
 
-#building non-ksu kernel
-ksu(){
-    #setting up localversion + ksu
-    echo -e "CONFIG_LOCALVERSION_AUTO=n\nCONFIG_LOCALVERSION=\"-LPoS-${LPOS_KERNEL_VERSION}-KSU\"\n" > "${WDIR}/arch/arm64/configs/version.config"    
-    ksu_enforcing(){
-        export SELINUX_STATUS="enforcing"
-        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"        
-        make ${ARGS} "${DEFCONFIG}" version.config ksu.config
-        make ${ARGS} menuconfig
-        make ${ARGS} -j$(nproc) || exit 1
-        dtb ; repack
-    }
-
-    ksu_permissive(){
-        export SELINUX_STATUS="permissive"
-        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"           
-        make ${ARGS} "${DEFCONFIG}" version.config permissive.config ksu.config
-        make ${ARGS} menuconfig
-        make ${ARGS} -j$(nproc) || exit 1
-        dtb ; repack        
-    }
-    ksu_enforcing
-    ksu_permissive
-}
-
 deep_clean(){
     cd "${WDIR}"
     echo -e "[i] Cleaning Up...\n\n"
     make ${ARGS} clean && make ${ARGS} mrproper
-
-    if [ -f ".allowlist_patched" ]; then
-        rm .allowlist_patched
-    fi
-
-    if [ -f ".kernelsu-fetch-lock" ]; then
-        rm .kernelsu-fetch-lock
-    fi    
-    
-    if [ -d "drivers/kernelsu" ]; then
-        rm -r drivers/kernelsu
-    fi
 }
 
 #packing
@@ -163,13 +118,10 @@ case "$USER_INPUT" in
     "-c")
         echo -e "\n\n[i] Performing a clean build...\n\n"
         lpos ;;
-    "-k")
-        echo -e "\n\n[i] Building KernelSU...\n\n"
-        ksu;;
     "-x") 
         echo -e "\n\n[i] Cleaning the source...\n\n"
         deep_clean ;;
     *)
-        echo -e "\n[x] Wrong Input..! \n\n [i] Usage : \n\n To build LPoS : build_kernel.sh -c\n To Clean the source : build_kernel.sh -x\n To Build KernelSU : build_kernel.sh -k"
+        echo -e "\n[x] Wrong Input..! \n\n [i] Usage : \n\n To build LPoS : build_kernel.sh -c\n To Clean the source : build_kernel.sh -x"
         ;;
 esac
