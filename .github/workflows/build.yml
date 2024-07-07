@@ -40,7 +40,6 @@ jobs:
           name: "LPoS-${{ env.LPOS_KERNEL_VERSION }}-[S10 5G]"
           path: |
             out/LPoS*.zip
-            out/KSU*.zip
 
       - name: Create release
         uses: ncipollo/release-action@v1
@@ -50,5 +49,5 @@ jobs:
           draft: false
           prerelease: false
           token: ${{ secrets.TOKEN }}          
-          artifacts: "out/LPoS*.zip,out/KSU*.zip"
+          artifacts: "out/LPoS*.zip"
           body: "Commit SHA: ${{ github.sha }}"
