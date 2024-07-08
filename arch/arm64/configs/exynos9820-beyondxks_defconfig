@@ -5519,6 +5519,7 @@ CONFIG_NVMEM=y
 #
 # CONFIG_FSI is not set
 # CONFIG_TEE is not set
+CONFIG_AINUR_DTS_SW=y
 
 #
 # CCIC configs
