@@ -59,7 +59,7 @@ dtb() {
     ${WDIR}/binaries/mkdtimg cfg_create "${INSTALLER}/dt.img" "${WDIR}/binaries/${SOC}.cfg" -d "${WDIR}/arch/arm64/boot/dts/exynos"
 }
 
-#building kernel
+#building non-ksu kernel
 lpos(){
     enforcing(){
         export SELINUX_STATUS="enforcing"
@@ -82,6 +82,31 @@ lpos(){
     }
     enforcing
     permissive
+}
+
+#building non-ksu kernel
+ksu(){
+    #setting up localversion + ksu
+    echo -e "CONFIG_LOCALVERSION_AUTO=n\nCONFIG_LOCALVERSION=\"-LPoS-${LPOS_KERNEL_VERSION}-KSU\"\n" > "${WDIR}/arch/arm64/configs/version.config"    
+    ksu_enforcing(){
+        export SELINUX_STATUS="enforcing"
+        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"        
+        make ${ARGS} "${DEFCONFIG}" version.config ksu.config
+        make ${ARGS} menuconfig
+        make ${ARGS} -j$(nproc) || exit 1
+        dtb ; repack
+    }
+
+    ksu_permissive(){
+        export SELINUX_STATUS="permissive"
+        export FILENAME="KSU-LPoS-${DEVICE}-${LPOS_KERNEL_VERSION}-twrp-${SELINUX_STATUS}"           
+        make ${ARGS} "${DEFCONFIG}" version.config permissive.config ksu.config
+        make ${ARGS} menuconfig
+        make ${ARGS} -j$(nproc) || exit 1
+        dtb ; repack        
+    }
+    ksu_enforcing
+    ksu_permissive
 }
 
 deep_clean(){
@@ -118,10 +143,13 @@ case "$USER_INPUT" in
     "-c")
         echo -e "\n\n[i] Performing a clean build...\n\n"
         lpos ;;
+    "-k")
+        echo -e "\n\n[i] Building KernelSU...\n\n"
+        ksu;;
     "-x") 
         echo -e "\n\n[i] Cleaning the source...\n\n"
         deep_clean ;;
     *)
-        echo -e "\n[x] Wrong Input..! \n\n [i] Usage : \n\n To build LPoS : build_kernel.sh -c\n To Clean the source : build_kernel.sh -x"
+        echo -e "\n[x] Wrong Input..! \n\n [i] Usage : \n\n To build LPoS : build_kernel.sh -c\n To Clean the source : build_kernel.sh -x\n To Build KernelSU : build_kernel.sh -k"
         ;;
 esac

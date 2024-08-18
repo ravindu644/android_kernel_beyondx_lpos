@@ -5749,6 +5749,11 @@ CONFIG_VBUS_NOTIFIER=y
 CONFIG_SPU_VERIFY=y
 
 #
+# KernelSU
+#
+CONFIG_KSU=n
+
+#
 # Firmware Drivers
 #
 CONFIG_ARM_PSCI_FW=y
